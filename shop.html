@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop — Classic Aura Premium Fashion &amp; Cosmetics</title>
+  <meta name="description" content="Browse the Classic Aura collection — curated women's fashion and luxury cosmetics. Filter by category, price, and find your perfect piece.">
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PVCL6HL3KT"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-PVCL6HL3KT');
+  </script>
+
+  <!-- Meta Pixel Code -->
+  <script>
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '1914672909068223');
+  fbq('track', 'PageView');
+  </script>
+  <noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=1914672909068223&ev=PageView&noscript=1"
+  /></noscript>
+  <!-- End Meta Pixel Code -->
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════════
+       START REUSABLE HEADER
+       ════════════════════════════════════════════ -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">Classic Aura</a>
+
+      <nav class="nav" aria-label="Main navigation">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="shop.html">Shop</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+
+      <div class="header-actions">
+        <a href="shop.html" class="action-btn search-desktop" aria-label="Search products">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </a>
+
+        <button class="action-btn wishlist-btn" aria-label="Wishlist">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </button>
+
+        <a href="cart.html" class="action-btn cart-btn" aria-label="Shopping cart">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+          <span class="cart-badge" id="cart-count">0</span>
+        </a>
+
+        <button class="hamburger" aria-label="Toggle menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="mobile-menu" role="dialog" aria-modal="true" aria-label="Navigation menu">
+      <a href="index.html">Home</a>
+      <a href="shop.html">Shop</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+    </div>
+  </header>
+  <!-- ════════════════════════════════════════════
+       END REUSABLE HEADER
+       ════════════════════════════════════════════ -->
+
+  <main class="main">
+
+    <!-- ─── SHOP HEADER ─── -->
+    <div class="container">
+      <div class="shop-header">
+        <h1>Shop</h1>
+        <p class="results-count" id="results-count">Showing 0 products</p>
+      </div>
+
+      <!-- ─── FILTER BAR ─── -->
+      <div class="shop-controls" id="shop-controls">
+
+        <!-- Search -->
+        <div class="control-group" style="flex:1; min-width:180px;">
+          <div class="search-wrapper">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Search products…"
+              aria-label="Search products"
+              autocomplete="off"
+            >
+          </div>
+        </div>
+
+        <!-- Category pills -->
+        <div class="control-group">
+          <div class="filter-pills" role="group" aria-label="Filter by category">
+            <label class="filter-pill" id="pill-fashion">
+              <input type="checkbox" class="filter-checkbox" value="fashion" aria-label="Filter by Fashion">
+              <span class="pill-dot" aria-hidden="true"></span>
+              Fashion
+            </label>
+            <label class="filter-pill" id="pill-cosmetics">
+              <input type="checkbox" class="filter-checkbox" value="cosmetics" aria-label="Filter by Cosmetics">
+              <span class="pill-dot" aria-hidden="true"></span>
+              Cosmetics
+            </label>
+          </div>
+        </div>
+
+        <!-- Price range -->
+        <div class="control-group">
+          <div class="price-range-group">
+            <label for="price-min">৳</label>
+            <input
+              type="number"
+              id="price-min"
+              placeholder="Min"
+              aria-label="Minimum price"
+              min="0"
+            >
+            <span class="range-sep" aria-hidden="true">—</span>
+            <input
+              type="number"
+              id="price-max"
+              placeholder="Max"
+              aria-label="Maximum price"
+              min="0"
+            >
+          </div>
+        </div>
+
+        <!-- Sort -->
+        <div class="control-group">
+          <div class="sort-wrapper">
+            <select id="sort-select" aria-label="Sort products">
+              <option value="featured">Sort: Featured</option>
+              <option value="newest">Sort: Newest</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="name">Name: A–Z</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Clear -->
+        <div class="control-group">
+          <button class="clear-filters-btn" id="clear-filters" aria-label="Clear all filters">
+            Clear all
+          </button>
+        </div>
+
+      </div>
+
+      <!-- ─── PRODUCT GRID ─── -->
+      <div class="grid-4" id="shop-grid">
+        <!-- Populated by renderShopProducts() -->
+      </div>
+
+      <!-- ─── EMPTY STATE ─── -->
+      <div class="shop-empty" id="shop-empty">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <h3>No products match</h3>
+        <p>Try adjusting your filters or search term to find what you&rsquo;re looking for.</p>
+        <button class="btn btn-secondary btn-sm" id="clear-filters-empty">Clear all filters</button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ════════════════════════════════════════════
+       START REUSABLE FOOTER
+       ════════════════════════════════════════════ -->
+  <footer class="footer">
+    <div class="footer-grid">
+
+      <div class="footer-col">
+        <h3>Classic Aura</h3>
+        <p>Premium fashion &amp; cosmetics for the modern woman. Curated elegance, delivered to your door.</p>
+        <div class="social-links">
+          <a href="https://www.facebook.com/share/1JRDPLqBXt/?mibextid=wwXIfr" target="_blank" rel="noopener" aria-label="Facebook">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+          </a>
+          <a href="https://www.instagram.com/classicauraofficial/" target="_blank" rel="noopener" aria-label="Instagram">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+            </svg>
+          </a>
+        </div>
+        <p style="margin-top:var(--space-md);font-size:0.875rem;color:rgba(255,255,255,0.65);">
+          <a href="tel:+8801924904441" style="color:rgba(255,255,255,0.7);">+880 1924-904441</a>
+        </p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="shop.html">Shop All</a></li>
+          <li><a href="shop.html?sort=newest">New Arrivals</a></li>
+          <li><a href="shop.html">Best Sellers</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Customer Care</h4>
+        <ul>
+          <li><a href="contact.html#shipping">Shipping &amp; Returns</a></li>
+          <li><a href="contact.html#size-guide">Size Guide</a></li>
+          <li><a href="contact.html#faq">FAQ</a></li>
+          <li><a href="contact.html">Contact Us</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Newsletter</h4>
+        <p>Be the first to know about new arrivals, exclusive drops, and early access.</p>
+        <form class="newsletter-form" novalidate>
+          <input type="email" placeholder="Enter your email" aria-label="Email address" required>
+          <button type="submit">Subscribe</button>
+        </form>
+      </div>
+
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 Classic Aura. All rights reserved.</p>
+      <p>Premium fashion &amp; cosmetics</p>
+    </div>
+  </footer>
+  <!-- ════════════════════════════════════════════
+       END REUSABLE FOOTER
+       ════════════════════════════════════════════ -->
+
+  <script src="js/products.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

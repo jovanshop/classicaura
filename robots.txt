@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /cart.html
+Disallow: /checkout.html
+Disallow: /admin.html
+
+Sitemap: https://classicaura.netlify.app/sitemap.xml

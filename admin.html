@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Classic Aura</title>
+  <style>
+    /* ═══════════════ RESET & BASE ═══════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 15px; scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+      background: #0f0f13;
+      color: #e0e0e0;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    input, select, button, textarea { font-family: inherit; font-size: inherit; }
+    a { color: #c9a961; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ═══════════════ PASSWORD MODAL ═══════════════ */
+    #password-modal {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(15,15,19,0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    #password-modal.hidden { display: none; }
+
+    .modal-card {
+      background: #1a1a24;
+      border: 1px solid #2a2a3a;
+      border-radius: 20px;
+      padding: 48px 40px 40px;
+      width: 100%; max-width: 400px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+      text-align: center;
+    }
+    .modal-card h1 {
+      font-size: 1.5rem; font-weight: 700; color: #fff;
+      margin-bottom: 4px;
+    }
+    .modal-card .subtitle {
+      color: #888; font-size: 0.875rem; margin-bottom: 28px;
+    }
+    .modal-card .lock-icon {
+      width: 48px; height: 48px; margin: 0 auto 20px;
+      background: #c9a96120; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #c9a961;
+    }
+    .modal-card input[type="password"] {
+      width: 100%; padding: 14px 18px;
+      background: #0f0f13; border: 1.5px solid #2a2a3a;
+      border-radius: 12px; color: #fff; font-size: 1rem;
+      outline: none; transition: border-color 0.2s;
+    }
+    .modal-card input[type="password"]:focus {
+      border-color: #c9a961;
+      box-shadow: 0 0 0 3px rgba(201,169,97,0.12);
+    }
+    .modal-card .btn-unlock {
+      width: 100%; padding: 14px; margin-top: 16px;
+      background: #c9a961; color: #0f0f13;
+      border: none; border-radius: 12px;
+      font-size: 0.9375rem; font-weight: 600; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .modal-card .btn-unlock:hover { background: #d4b97a; }
+    .modal-card .btn-unlock:disabled {
+      opacity: 0.5; cursor: not-allowed;
+    }
+    .auth-error {
+      color: #e74c3c; font-size: 0.875rem; margin-top: 12px;
+      display: none;
+    }
+    .auth-error.visible { display: block; }
+    .auth-loading {
+      display: none; margin-top: 12px;
+      color: #888; font-size: 0.875rem;
+    }
+    .auth-loading.visible { display: block; }
+    .spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid #888; border-top-color: #c9a961;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ═══════════════ DASHBOARD ═══════════════ */
+    #dashboard { display: none; }
+    #dashboard.visible { display: block; }
+
+    /* Header */
+    .admin-header {
+      background: #1a1a24;
+      border-bottom: 1px solid #2a2a3a;
+      padding: 0 24px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .admin-header-inner {
+      max-width: 1400px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .admin-header h2 {
+      font-size: 1.125rem; font-weight: 700; color: #fff;
+    }
+    .admin-header h2 span { color: #c9a961; }
+    .admin-header .header-right {
+      display: flex; align-items: center; gap: 16px;
+    }
+    .admin-header .header-right .version {
+      font-size: 0.75rem; color: #555; display: none;
+    }
+    @media (min-width: 600px) { .admin-header .header-right .version { display: block; } }
+    .btn-logout {
+      padding: 8px 20px; font-size: 0.8125rem; font-weight: 600;
+      background: transparent; color: #e74c3c; border: 1.5px solid #e74c3c;
+      border-radius: 8px; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-logout:hover {
+      background: #e74c3c; color: #fff;
+    }
+
+    /* Main content */
+    .admin-main {
+      max-width: 1400px; margin: 0 auto; padding: 24px;
+    }
+
+    /* Summary cards */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px; margin-bottom: 28px;
+    }
+    .summary-card {
+      background: #1a1a24; border: 1px solid #2a2a3a;
+      border-radius: 14px; padding: 20px;
+    }
+    .summary-card .label {
+      font-size: 0.75rem; text-transform: uppercase;
+      letter-spacing: 0.06em; color: #888; margin-bottom: 6px;
+    }
+    .summary-card .value {
+      font-size: 1.75rem; font-weight: 700; color: #fff;
+    }
+    .summary-card .value.gold { color: #c9a961; }
+    .summary-card .value.green { color: #2ecc71; }
+    .summary-card .value.red { color: #e74c3c; }
+    .summary-card .value.blue { color: #5b8def; }
+
+    /* Recent orders mini-list */
+    .recent-section {
+      background: #1a1a24; border: 1px solid #2a2a3a;
+      border-radius: 14px; padding: 20px; margin-bottom: 28px;
+    }
+    .recent-section h3 {
+      font-size: 0.9375rem; font-weight: 600; color: #fff;
+      margin-bottom: 12px;
+    }
+    .recent-list {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .recent-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; background: #0f0f13;
+      border-radius: 10px; font-size: 0.875rem;
+    }
+    .recent-item .ri-order { color: #c9a961; font-weight: 600; }
+    .recent-item .ri-name { color: #ccc; }
+    .recent-item .ri-total { color: #fff; font-weight: 600; }
+    .status-badge {
+      display: inline-block; padding: 2px 10px; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 600;
+    }
+    .status-badge.pending { background: #f39c1220; color: #f39c12; }
+    .status-badge.processing { background: #5b8def20; color: #5b8def; }
+    .status-badge.shipped { background: #9b59b620; color: #9b59b6; }
+    .status-badge.delivered { background: #2ecc7120; color: #2ecc71; }
+    .status-badge.cancelled { background: #e74c3c20; color: #e74c3c; }
+
+    /* Search & Filter */
+    .filter-bar {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      margin-bottom: 20px; align-items: center;
+    }
+    .filter-bar .search-wrap {
+      flex: 1; min-width: 200px; position: relative;
+    }
+    .filter-bar .search-wrap input {
+      width: 100%; padding: 11px 16px 11px 40px;
+      background: #0f0f13; border: 1.5px solid #2a2a3a;
+      border-radius: 10px; color: #fff; font-size: 0.875rem;
+      outline: none; transition: border-color 0.2s;
+    }
+    .filter-bar .search-wrap input:focus { border-color: #c9a961; }
+    .filter-bar .search-wrap input::placeholder { color: #555; }
+    .filter-bar .search-wrap .search-icon {
+      position: absolute; left: 14px; top: 50%;
+      transform: translateY(-50%); color: #555; pointer-events: none;
+    }
+    .filter-bar select {
+      padding: 11px 36px 11px 16px;
+      background: #0f0f13; border: 1.5px solid #2a2a3a;
+      border-radius: 10px; color: #ccc; font-size: 0.875rem;
+      outline: none; cursor: pointer; transition: border-color 0.2s;
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+    }
+    .filter-bar select:focus { border-color: #c9a961; }
+    .filter-bar .orders-count {
+      font-size: 0.8125rem; color: #666;
+      margin-left: auto; white-space: nowrap;
+    }
+
+    /* Orders Table */
+    .table-wrap {
+      overflow-x: auto;
+      background: #1a1a24; border: 1px solid #2a2a3a;
+      border-radius: 14px;
+    }
+    table.orders-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 0.875rem; min-width: 900px;
+    }
+    table.orders-table thead th {
+      text-align: left; padding: 14px 16px;
+      font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.06em; color: #666;
+      border-bottom: 1px solid #2a2a3a;
+      background: #1a1a24; position: sticky; top: 0;
+    }
+    table.orders-table tbody tr {
+      transition: background 0.15s;
+    }
+    table.orders-table tbody tr:hover {
+      background: rgba(201,169,97,0.04);
+    }
+    table.orders-table tbody td {
+      padding: 12px 16px; border-bottom: 1px solid #23232f;
+      color: #ccc; vertical-align: middle;
+    }
+    table.orders-table tbody tr:last-child td { border-bottom: none; }
+
+    .cell-order-id { color: #c9a961; font-weight: 600; font-size: 0.8125rem; }
+    .cell-name { color: #fff; font-weight: 500; }
+    .cell-phone { font-size: 0.8125rem; color: #888; }
+    .cell-items { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #999; }
+    .cell-total { color: #fff; font-weight: 600; white-space: nowrap; }
+
+    /* Status dropdown in table */
+    .status-select {
+      padding: 4px 8px; border-radius: 6px;
+      border: 1.5px solid #2a2a3a; background: #0f0f13;
+      color: #ccc; font-size: 0.8125rem; font-weight: 500;
+      cursor: pointer; outline: none; transition: border-color 0.2s;
+      min-width: 110px;
+    }
+    .status-select:focus { border-color: #c9a961; }
+    .status-select option { background: #1a1a24; color: #ccc; }
+
+    /* Table empty state */
+    .empty-table {
+      text-align: center; padding: 60px 20px; color: #666;
+    }
+    .empty-table svg { margin-bottom: 12px; color: #333; }
+    .empty-table p { font-size: 0.9375rem; }
+
+    /* Refresh button */
+    .btn-refresh {
+      padding: 10px 18px; font-size: 0.8125rem; font-weight: 600;
+      background: #c9a961; color: #0f0f13; border: none;
+      border-radius: 10px; cursor: pointer; transition: background 0.2s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-refresh:hover { background: #d4b97a; }
+    .btn-refresh:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Toast notification */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      padding: 12px 24px; border-radius: 12px;
+      font-size: 0.875rem; font-weight: 500;
+      z-index: 9999; opacity: 0; transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.visible { opacity: 1; }
+    .toast.success { background: #2ecc71; color: #fff; }
+    .toast.error { background: #e74c3c; color: #fff; }
+
+    /* ═══════════════ RESPONSIVE ═══════════════ */
+    @media (max-width: 768px) {
+      .modal-card { padding: 32px 24px; margin: 16px; }
+      .admin-main { padding: 16px; }
+      .summary-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .summary-card { padding: 14px; }
+      .summary-card .value { font-size: 1.375rem; }
+      .admin-header { padding: 0 16px; }
+      .admin-header h2 { font-size: 1rem; }
+      table.orders-table { font-size: 0.8125rem; min-width: 700px; }
+      table.orders-table thead th,
+      table.orders-table tbody td { padding: 10px 12px; }
+      .filter-bar .orders-count { width: 100%; text-align: left; }
+    }
+    @media (max-width: 480px) {
+      .summary-grid { grid-template-columns: 1fr 1fr; }
+      table.orders-table { min-width: 600px; font-size: 0.75rem; }
+      .status-select { min-width: 90px; font-size: 0.75rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════ PASSWORD MODAL ═══════════════ -->
+<div id="password-modal">
+  <div class="modal-card">
+    <div class="lock-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+    </div>
+    <h1>Classic Aura</h1>
+    <p class="subtitle">Admin Portal — enter password to continue</p>
+    <input type="password" id="password-input" placeholder="Admin password" autofocus>
+    <button class="btn-unlock" id="btn-unlock" onclick="authenticate()">Unlock Dashboard</button>
+    <div class="auth-error" id="auth-error">Incorrect password. Try again.</div>
+    <div class="auth-loading" id="auth-loading"><span class="spinner"></span>Verifying…</div>
+  </div>
+</div>
+
+<!-- ═══════════════ DASHBOARD ═══════════════ -->
+<div id="dashboard">
+  <!-- Header -->
+  <header class="admin-header">
+    <div class="admin-header-inner">
+      <h2>Classic Aura <span>Admin</span></h2>
+      <div class="header-right">
+        <span class="version">v1.0</span>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <!-- Summary Cards -->
+    <div class="summary-grid" id="summary-cards">
+      <div class="summary-card">
+        <div class="label">Total Orders</div>
+        <div class="value blue" id="stat-total">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Pending</div>
+        <div class="value gold" id="stat-pending">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Delivered</div>
+        <div class="value green" id="stat-delivered">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Revenue (BDT)</div>
+        <div class="value gold" id="stat-revenue">—</div>
+      </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="recent-section">
+      <h3>Recent Orders</h3>
+      <div class="recent-list" id="recent-orders"><span style="color:#555;">Loading…</span></div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <span class="search-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </span>
+        <input type="text" id="search-input" placeholder="Search by name, phone, or order ID…" oninput="filterOrders()">
+      </div>
+      <select id="status-filter" onchange="filterOrders()">
+        <option value="all">All Status</option>
+        <option value="pending">Pending</option>
+        <option value="processing">Processing</option>
+        <option value="shipped">Shipped</option>
+        <option value="delivered">Delivered</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+      <button class="btn-refresh" id="btn-refresh" onclick="fetchOrders()">⟳ Refresh</button>
+      <span class="orders-count" id="orders-count"></span>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="table-wrap" id="table-wrap">
+      <table class="orders-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Phone</th>
+            <th>City</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="orders-body">
+          <tr><td colspan="8" class="empty-table">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <p>Enter password to load orders</p>
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- ═══════════════ TOAST ═══════════════ -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══ CONFIG — EDIT THIS ═══
+const SCRIPT_URL = 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+// ════════════════════════════
+
+let gPassword = ''; // In-memory only — never stored in localStorage
+let gOrders = [];
+
+// ═══════════════ AUTH ═══════════════
+
+// Press Enter in password field to submit
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('password-input');
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') authenticate();
+  });
+  input.focus();
+});
+
+async function authenticate() {
+  const password = document.getElementById('password-input').value.trim();
+  if (!password) return;
+  if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
+    showError('Admin API not configured. Set SCRIPT_URL in admin.html.');
+    return;
+  }
+
+  const btn = document.getElementById('btn-unlock');
+  const errEl = document.getElementById('auth-error');
+  const loadEl = document.getElementById('auth-loading');
+  btn.disabled = true;
+  errEl.classList.remove('visible');
+  loadEl.classList.add('visible');
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'getOrders', password }),
+    });
+
+    // With no-cors we can't read the response body — need to switch to
+    // a CORS-capable Apps Script deployment. Let me try without no-cors.
+    // Actually, the Apps Script web app DOES support CORS when deployed
+    // as "Anyone" access. Let's try without no-cors first.
+    // The issue is that the initial Apps Script deployment might not
+    // support CORS responses. Let me handle both cases.
+
+    // Since we can't reliably read no-cors responses, let's try a
+    // different approach: send the request without no-cors mode.
+    // If the Apps Script is deployed as "Anyone" (even anonymous),
+    // the response is readable.
+
+    gPassword = password;
+    await loadOrders();
+
+  } catch (err) {
+    // Try a second approach — the password may have been correct even
+    // if the fetch failed due to CORS. We'll assume it worked and try
+    // loading orders.
+    // But actually, for a security-sensitive app, let's handle this properly.
+    showError('Connection error. Check the Apps Script URL and deployment.');
+    btn.disabled = false;
+    loadEl.classList.remove('visible');
+  }
+}
+
+async function loadOrders() {
+  const errEl = document.getElementById('auth-error');
+  const loadEl = document.getElementById('auth-loading');
+  const btn = document.getElementById('btn-unlock');
+  const modal = document.getElementById('password-modal');
+  const dashboard = document.getElementById('dashboard');
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'getOrders', password: gPassword }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      // Apps Script returns 401 with JSON body for wrong password
+      if (res.status === 401 || text.includes('Unauthorized')) {
+        errEl.textContent = 'Incorrect password. Try again.';
+        errEl.classList.add('visible');
+        btn.disabled = false;
+        loadEl.classList.remove('visible');
+        gPassword = '';
+        return;
+      }
+      throw new Error('HTTP ' + res.status);
+    }
+
+    const data = await res.json();
+
+    if (data.error) {
+      errEl.textContent = data.error;
+      errEl.classList.add('visible');
+      btn.disabled = false;
+      loadEl.classList.remove('visible');
+      gPassword = '';
+      return;
+    }
+
+    // Success — unlock dashboard
+    modal.classList.add('hidden');
+    dashboard.classList.add('visible');
+    gOrders = data.orders || [];
+    renderSummary(data.summary);
+    renderRecent(data.summary);
+    renderTable();
+    btn.disabled = false;
+    loadEl.classList.remove('visible');
+
+  } catch (err) {
+    // If CORS blocks us, show guidance
+    errEl.textContent = 'Cannot reach the admin API. Make sure the Apps Script is deployed as a web app with "Anyone" access.';
+    errEl.classList.add('visible');
+    btn.disabled = false;
+    loadEl.classList.remove('visible');
+    gPassword = '';
+  }
+}
+
+function logout() {
+  gPassword = '';
+  gOrders = [];
+  document.getElementById('dashboard').classList.remove('visible');
+  document.getElementById('password-modal').classList.remove('hidden');
+  document.getElementById('password-input').value = '';
+  document.getElementById('password-input').focus();
+  document.getElementById('auth-error').classList.remove('visible');
+}
+
+// ═══════════════ RENDER ═══════════════
+
+function renderSummary(summary) {
+  if (!summary) return;
+  document.getElementById('stat-total').textContent = summary.totalOrders || 0;
+  document.getElementById('stat-pending').textContent = summary.pendingOrders || 0;
+  document.getElementById('stat-delivered').textContent = summary.deliveredOrders || 0;
+  document.getElementById('stat-revenue').textContent = '৳' + (summary.totalRevenue || 0).toLocaleString('en-BN');
+}
+
+function renderRecent(summary) {
+  const container = document.getElementById('recent-orders');
+  if (!summary || !summary.recentOrders || summary.recentOrders.length === 0) {
+    container.innerHTML = '<span style="color:#555;">No orders yet.</span>';
+    return;
+  }
+  container.innerHTML = summary.recentOrders.map(o => `
+    <div class="recent-item">
+      <span class="ri-order">${o.orderId || '—'}</span>
+      <span class="ri-name">${esc(o.name || '')}</span>
+      <span class="ri-total">৳${o.total || '0'}</span>
+      <span class="status-badge ${(o.status || 'pending').toLowerCase()}">${o.status || 'Pending'}</span>
+    </div>
+  `).join('');
+}
+
+function renderTable() {
+  const tbody = document.getElementById('orders-body');
+  if (!gOrders || gOrders.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-table">' +
+      '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+      '<p>No orders found.</p></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = gOrders.map((o, idx) => {
+    const status = (o.status || 'Pending').toLowerCase();
+    const date = o.timestamp || '';
+    const orderId = o.orderId || '';
+    const name = o.name || '';
+    const phone = o.phone || '';
+    const city = o.city || o.citydistrict || '';
+    const items = o.items || '';
+    const total = o.total || '0';
+
+    return `<tr>
+      <td style="white-space:nowrap;font-size:0.8125rem;color:#888;">${esc(date)}</td>
+      <td class="cell-order-id">${esc(orderId)}</td>
+      <td><div class="cell-name">${esc(name)}</div></td>
+      <td class="cell-phone">${esc(phone)}</td>
+      <td style="color:#888;font-size:0.8125rem;">${esc(city)}</td>
+      <td class="cell-items" title="${esc(items)}">${esc(items)}</td>
+      <td class="cell-total">৳${esc(total)}</td>
+      <td>
+        <select class="status-select" data-order-id="${esc(orderId)}" onchange="updateStatus(this, '${esc(orderId)}')">
+          <option value="Pending" ${status === 'pending' ? 'selected' : ''}>Pending</option>
+          <option value="Processing" ${status === 'processing' ? 'selected' : ''}>Processing</option>
+          <option value="Shipped" ${status === 'shipped' ? 'selected' : ''}>Shipped</option>
+          <option value="Delivered" ${status === 'delivered' ? 'selected' : ''}>Delivered</option>
+          <option value="Cancelled" ${status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+        </select>
+      </td>
+    </tr>`;
+  }).join('');
+
+  updateCount();
+}
+
+function filterOrders() {
+  const query = document.getElementById('search-input').value.toLowerCase().trim();
+  const statusFilter = document.getElementById('status-filter').value;
+  const tbody = document.getElementById('orders-body');
+
+  if (!gOrders || gOrders.length === 0) return;
+
+  const filtered = gOrders.filter(o => {
+    const s = (o.status || 'Pending').toLowerCase();
+    if (statusFilter !== 'all' && s !== statusFilter) return false;
+    if (query) {
+      const searchTarget = ((o.orderId || '') + ' ' + (o.name || '') + ' ' + (o.phone || '')).toLowerCase();
+      if (!searchTarget.includes(query)) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-table"><p>No matching orders.</p></td></tr>';
+    document.getElementById('orders-count').textContent = '';
+    return;
+  }
+
+  // Re-render only filtered rows
+  tbody.innerHTML = filtered.map(o => {
+    const status = (o.status || 'Pending').toLowerCase();
+    return `<tr>
+      <td style="white-space:nowrap;font-size:0.8125rem;color:#888;">${esc(o.timestamp || '')}</td>
+      <td class="cell-order-id">${esc(o.orderId || '')}</td>
+      <td><div class="cell-name">${esc(o.name || '')}</div></td>
+      <td class="cell-phone">${esc(o.phone || '')}</td>
+      <td style="color:#888;font-size:0.8125rem;">${esc(o.city || o.citydistrict || '')}</td>
+      <td class="cell-items" title="${esc(o.items || '')}">${esc(o.items || '')}</td>
+      <td class="cell-total">৳${esc(o.total || '0')}</td>
+      <td>
+        <select class="status-select" onchange="updateStatus(this, '${esc(o.orderId || '')}')">
+          <option value="Pending" ${status === 'pending' ? 'selected' : ''}>Pending</option>
+          <option value="Processing" ${status === 'processing' ? 'selected' : ''}>Processing</option>
+          <option value="Shipped" ${status === 'shipped' ? 'selected' : ''}>Shipped</option>
+          <option value="Delivered" ${status === 'delivered' ? 'selected' : ''}>Delivered</option>
+          <option value="Cancelled" ${status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+        </select>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('orders-count').textContent = `Showing ${filtered.length} of ${gOrders.length} orders`;
+}
+
+function updateCount() {
+  const count = gOrders ? gOrders.length : 0;
+  document.getElementById('orders-count').textContent = `${count} order${count !== 1 ? 's' : ''}`;
+}
+
+// ═══════════════ STATUS UPDATE ═══════════════
+
+async function updateStatus(selectEl, orderId) {
+  const newStatus = selectEl.value;
+  const originalValue = selectEl.dataset.previous || '';
+
+  if (!orderId) return;
+
+  // Optimistic UI — disable the select temporarily
+  selectEl.disabled = true;
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'updateStatus',
+        password: gPassword,
+        orderId: orderId,
+        status: newStatus,
+      }),
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || 'Update failed');
+    }
+
+    const data = await res.json();
+    if (data.success) {
+      showToast('Status updated to ' + newStatus, 'success');
+      // Update local data
+      const order = gOrders.find(o => o.orderId === orderId);
+      if (order) order.status = newStatus;
+      // Re-filter to keep UI consistent
+      filterOrders();
+    } else {
+      throw new Error(data.error || 'Update failed');
+    }
+
+  } catch (err) {
+    showToast('Error updating status: ' + err.message, 'error');
+    // Revert the select to previous value by re-rendering
+    filterOrders();
+  } finally {
+    selectEl.disabled = false;
+  }
+}
+
+// ═══════════════ FETCH ORDERS ═══════════════
+
+async function fetchOrders() {
+  const btn = document.getElementById('btn-refresh');
+  btn.disabled = true;
+  btn.textContent = '⟳ Loading…';
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'getOrders', password: gPassword }),
+    });
+
+    if (!res.ok) throw new Error('Failed to fetch');
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    gOrders = data.orders || [];
+    renderSummary(data.summary);
+    renderRecent(data.summary);
+    filterOrders();
+    showToast('Orders refreshed', 'success');
+
+  } catch (err) {
+    showToast('Error refreshing: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⟳ Refresh';
+  }
+}
+
+// Auto-refresh every 60 seconds
+setInterval(() => {
+  if (gPassword && document.getElementById('dashboard').classList.contains('visible')) {
+    fetchOrders();
+  }
+}, 60000);
+
+// ═══════════════ UTILITIES ═══════════════
+
+function esc(str) {
+  if (typeof str !== 'string') return String(str || '');
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function showToast(message, type) {
+  const el = document.getElementById('toast');
+  el.textContent = message;
+  el.className = 'toast ' + type + ' visible';
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.remove('visible'), 3000);
+}
+
+function showError(msg) {
+  document.getElementById('auth-error').textContent = msg;
+  document.getElementById('auth-error').classList.add('visible');
+  document.getElementById('btn-unlock').disabled = false;
+  document.getElementById('auth-loading').classList.remove('visible');
+}
+</script>
+
+</body>
+</html>
