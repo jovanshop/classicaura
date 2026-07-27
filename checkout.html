@@ -121,7 +121,7 @@
           <h4>Order Summary</h4>
           <div id="order-confirmed-items"></div>
           <div class="summary-row"><span class="label">Subtotal</span><span id="confirmed-subtotal">৳ 0</span></div>
-          <div class="summary-row"><span class="label">Delivery</span><span>৳ 60</span></div>
+          <div class="summary-row"><span class="label">Delivery</span><span id="confirmed-delivery">৳ 60</span></div>
           <div class="summary-row total"><span class="label">Total</span><span id="confirmed-total">৳ 0</span></div>
         </div>
 
@@ -222,13 +222,21 @@
             <div class="order-summary-items" id="checkout-summary-items">
               <!-- Populated by initCheckoutPage() -->
             </div>
+            <div class="shipping-progress" id="checkout-shipping-progress">
+              <div class="shipping-progress-header">Free Shipping Progress (Target: 2,000 BDT)</div>
+              <div class="shipping-progress-track">
+                <div class="shipping-progress-fill" id="checkout-shipping-progress-fill" style="width:0%;"></div>
+              </div>
+              <span class="shipping-progress-label" id="checkout-shipping-progress-label">0%</span>
+              <p class="shipping-message" id="checkout-shipping-message">Add items worth 2,000 BDT to unlock FREE Shipping!</p>
+            </div>
             <div class="summary-row">
               <span class="label">Subtotal</span>
               <span id="checkout-subtotal">৳ 0</span>
             </div>
             <div class="summary-row">
               <span class="label">Delivery</span>
-              <span>৳ 60</span>
+              <span id="checkout-delivery">৳ 60</span>
             </div>
             <div class="summary-row total">
               <span class="label">Total</span>

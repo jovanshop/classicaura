@@ -1385,6 +1385,7 @@ function renderProductCards(grid, products) {
    ════════════════════════════════════════════ */
 
 const DELIVERY_FEE = 60;
+const FREE_SHIPPING_THRESHOLD = 2000;
 
 function initCartPage() {
   const container = document.getElementById('cart-items-container');
@@ -1654,7 +1655,7 @@ function renderCart() {
 }
 
 function updateFreeShippingProgressBar(cartTotal) {
-  var TARGET = 2500;
+  var TARGET = FREE_SHIPPING_THRESHOLD;
   var bar = document.getElementById('shipping-progress-fill');
   var label = document.getElementById('shipping-progress-label');
   var msg = document.getElementById('shipping-message');
@@ -1673,7 +1674,7 @@ function updateFreeShippingProgressBar(cartTotal) {
   } else {
     bar.classList.remove('completed');
     if (cartTotal <= 0) {
-      msg.textContent = 'Add items worth 2,500 BDT to unlock FREE Shipping!';
+      msg.textContent = 'Add items worth 2,000 BDT to unlock FREE Shipping!';
     } else {
       var remaining = TARGET - cartTotal;
       msg.innerHTML = 'Add <span class="highlight">' + remaining.toLocaleString('en-BN') + ' BDT</span> more to get FREE Shipping!';
@@ -1753,7 +1754,7 @@ function updateCartTotals() {
   const discount = getDiscountActive();
   const effectiveSubtotal = discount ? Math.round(rawSubtotal * (1 - DISCOUNT_RATE)) : rawSubtotal;
   const discountAmount = rawSubtotal - effectiveSubtotal;
-  const delivery = cart.length > 0 ? DELIVERY_FEE : 0;
+  const delivery = cart.length > 0 && effectiveSubtotal < FREE_SHIPPING_THRESHOLD ? DELIVERY_FEE : 0;
   const total = effectiveSubtotal + delivery;
 
   const subtotalEl = document.getElementById('cart-subtotal');
@@ -1864,10 +1865,40 @@ function initCheckoutTimer() {
   }, 1000);
 }
 
+function updateCheckoutShippingBar(cartTotal) {
+  var TARGET = FREE_SHIPPING_THRESHOLD;
+  var bar = document.getElementById('checkout-shipping-progress-fill');
+  var label = document.getElementById('checkout-shipping-progress-label');
+  var msg = document.getElementById('checkout-shipping-message');
+  if (!bar || !label || !msg) return;
+
+  var pct = Math.min((cartTotal / TARGET) * 100, 100);
+  var rounded = Math.round(pct);
+
+  bar.style.width = rounded + '%';
+  label.textContent = rounded + '%';
+
+  if (cartTotal >= TARGET) {
+    bar.classList.add('completed');
+    msg.textContent = 'Congratulations! You\'ve unlocked FREE Shipping! 🎉';
+    msg.className = 'shipping-message success';
+  } else {
+    bar.classList.remove('completed');
+    if (cartTotal <= 0) {
+      msg.textContent = 'Add items worth 2,000 BDT to unlock FREE Shipping!';
+    } else {
+      var remaining = TARGET - cartTotal;
+      msg.innerHTML = 'Add <span class="highlight">' + remaining.toLocaleString('en-BN') + ' BDT</span> more to get FREE Shipping!';
+    }
+    msg.className = 'shipping-message';
+  }
+}
+
 function renderCheckoutSummary() {
   const cart = getCart();
   const itemsContainer = document.getElementById('checkout-summary-items');
   const subtotalEl = document.getElementById('checkout-subtotal');
+  const deliveryEl = document.getElementById('checkout-delivery');
   const totalEl = document.getElementById('checkout-total');
 
   if (!itemsContainer) return;
@@ -1876,7 +1907,7 @@ function renderCheckoutSummary() {
     (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1),
     0
   );
-  const delivery = DELIVERY_FEE;
+  const delivery = cart.length > 0 && subtotal < FREE_SHIPPING_THRESHOLD ? DELIVERY_FEE : 0;
   const total = subtotal + delivery;
 
   itemsContainer.innerHTML = cart
@@ -1899,7 +1930,10 @@ function renderCheckoutSummary() {
     .join('');
 
   if (subtotalEl) subtotalEl.textContent = `৳ ${subtotal.toLocaleString('en-BN')}`;
+  if (deliveryEl) deliveryEl.textContent = delivery > 0 ? `৳ ${delivery}` : '৳ 0';
   if (totalEl) totalEl.textContent = `৳ ${total.toLocaleString('en-BN')}`;
+
+  updateCheckoutShippingBar(subtotal);
 }
 
 function validateCheckoutForm() {
@@ -1946,7 +1980,8 @@ function submitOrder() {
     (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1),
     0
   );
-  const total = subtotal + DELIVERY_FEE;
+  const delivery = cart.length > 0 && subtotal < FREE_SHIPPING_THRESHOLD ? DELIVERY_FEE : 0;
+  const total = subtotal + delivery;
 
   // Get payment method
   const paymentRadio = document.querySelector('input[name="payment"]:checked');
@@ -1966,6 +2001,7 @@ function submitOrder() {
   // Populate confirmation summary
   const confirmedItems = document.getElementById('order-confirmed-items');
   const confirmedSubtotal = document.getElementById('confirmed-subtotal');
+  const confirmedDelivery = document.getElementById('confirmed-delivery');
   const confirmedTotal = document.getElementById('confirmed-total');
 
   if (confirmedItems) {
@@ -1990,6 +2026,7 @@ function submitOrder() {
   }
 
   if (confirmedSubtotal) confirmedSubtotal.textContent = `৳ ${subtotal.toLocaleString('en-BN')}`;
+  if (confirmedDelivery) confirmedDelivery.textContent = delivery > 0 ? `৳ ${delivery}` : '৳ 0';
   if (confirmedTotal) confirmedTotal.textContent = `৳ ${total.toLocaleString('en-BN')}`;
 
   // Clear cart
