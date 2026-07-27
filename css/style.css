@@ -1722,6 +1722,34 @@ textarea.form-input {
   display: block;
 }
 
+/* ─── Stock Indicator ─── */
+.stock-indicator {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: var(--space-lg);
+  display: none;
+}
+
+.stock-indicator.stock-urgent,
+.stock-indicator.stock-limited {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stock-indicator.stock-urgent {
+  color: #B06A4A;
+}
+
+.stock-indicator.stock-limited {
+  color: var(--color-gray-500);
+}
+
+.stock-indicator.stock-urgent svg {
+  flex-shrink: 0;
+  color: #B06A4A;
+}
+
 /* ─── Product Tabs ─── */
 .product-tabs {
   padding-top: var(--space-xl);
@@ -2503,6 +2531,35 @@ textarea.form-input {
 
 .checkout-header h1 {
   margin-bottom: var(--space-2xs);
+}
+
+/* Checkout countdown timer */
+.checkout-timer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  background: rgba(201, 169, 97, 0.08);
+  border: 1px solid rgba(201, 169, 97, 0.2);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-charcoal);
+}
+
+.checkout-timer svg {
+  flex-shrink: 0;
+  color: var(--color-gold);
+}
+
+.checkout-timer.expired {
+  background: var(--color-gray-100);
+  border-color: var(--color-gray-200);
+}
+
+.checkout-timer.expired svg {
+  color: var(--color-gray-400);
 }
 
 /* Checkout form */

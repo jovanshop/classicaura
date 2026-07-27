@@ -965,6 +965,9 @@ function renderProductPage(product, container) {
           </div>
         </div>
 
+        <!-- Stock indicator -->
+        <div id="stock-indicator" class="stock-indicator"></div>
+
         <!-- Quantity stepper -->
         <div class="qty-group">
           <span class="qty-label">Quantity</span>
@@ -1083,6 +1086,18 @@ function renderProductPage(product, container) {
       </div>
     </div>
   `;
+
+  // ── Stock indicator ──
+  const stockEl = document.getElementById('stock-indicator');
+  if (stockEl && product.stock !== undefined) {
+    if (product.stock <= 5) {
+      stockEl.className = 'stock-indicator stock-urgent';
+      stockEl.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Only ' + product.stock + ' left in stock!';
+    } else if (product.stock <= 15) {
+      stockEl.className = 'stock-indicator stock-limited';
+      stockEl.textContent = 'Limited stock';
+    }
+  }
 
   // ── Wire up events ──
 
@@ -1780,6 +1795,9 @@ function initCheckoutPage() {
 
   renderCheckoutSummary();
 
+  // ── Checkout countdown timer (15 min) ──
+  initCheckoutTimer();
+
   // Meta Pixel: InitiateCheckout
   if (typeof fbq === 'function') {
     const total = cart.reduce(
@@ -1811,6 +1829,39 @@ function initCheckoutPage() {
       submitOrder();
     }
   });
+}
+
+function initCheckoutTimer() {
+  const timerEl = document.getElementById('checkout-timer');
+  const textEl = document.getElementById('checkout-timer-text');
+  if (!timerEl || !textEl) return;
+
+  const DURATION = 15 * 60; // 15 minutes in seconds
+  const KEY = 'classicAura_checkoutTimer';
+
+  var stored = sessionStorage.getItem(KEY);
+  var endTime = null;
+  if (stored) {
+    try { endTime = JSON.parse(stored).endTime; } catch (e) {}
+  }
+  if (!endTime) {
+    endTime = Date.now() + DURATION * 1000;
+    sessionStorage.setItem(KEY, JSON.stringify({ endTime: endTime }));
+  }
+
+  var interval = setInterval(function () {
+    var remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+    var mins = Math.floor(remaining / 60);
+    var secs = remaining % 60;
+    textEl.textContent = 'Your cart is reserved for the next ' +
+      (mins < 10 ? '0' : '') + mins + ':' +
+      (secs < 10 ? '0' : '') + secs;
+
+    if (remaining <= 0) {
+      clearInterval(interval);
+      timerEl.classList.add('expired');
+    }
+  }, 1000);
 }
 
 function renderCheckoutSummary() {
