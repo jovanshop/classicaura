@@ -350,90 +350,15 @@ textarea.form-input {
   resize: vertical;
 }
 
-:root {
-  --banner-height: 40px;
-}
-
-/* ─── Top Announcement Banner ─── */
+/* ─── Top Announcement Banner (hidden by default) ─── */
 .top-banner {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 40px;
-  z-index: 1001;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(90deg, var(--color-charcoal), #2a2a2a, var(--color-charcoal));
-  background-size: 200% 100%;
-  animation: bannerPulse 4s ease-in-out infinite;
-  padding: 0 var(--container-padding);
-  overflow: hidden;
-}
-
-.top-banner-text {
-  margin: 0;
-  font-size: 0.8125rem;
-  font-weight: 400;
-  color: var(--color-gold-light);
-  text-align: center;
-  white-space: nowrap;
-  letter-spacing: 0.02em;
-}
-
-.top-banner-text strong {
-  color: var(--color-white);
-  font-weight: 600;
-}
-
-.top-banner-emoji {
-  font-size: 0.875rem;
-}
-
-.top-banner-dismiss {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: var(--color-gold-light);
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-full);
-  transition: color var(--transition-fast), background var(--transition-fast);
-  flex-shrink: 0;
-}
-
-.top-banner-dismiss:hover {
-  color: var(--color-white);
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.top-banner.dismissing {
-  animation: bannerSlideUp 0.35s ease-in forwards;
-}
-
-@keyframes bannerPulse {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-@keyframes bannerSlideUp {
-  to {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
+  display: none;
 }
 
 /* ─── Header ─── */
 .header {
   position: fixed;
-  top: var(--banner-height, 0);
+  top: 0;
   left: 0;
   width: 100%;
   z-index: 1000;
@@ -950,6 +875,50 @@ textarea.form-input {
   margin-bottom: var(--space-xl);
   max-width: 480px;
   line-height: 1.6;
+}
+
+/* ─── Hero Promo Badge ─── */
+.promo-badge-hero {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(212, 175, 55, 0.65);
+  color: var(--color-white);
+  padding: 8px 24px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-lg);
+  animation: floatAndGlow 3s ease-in-out infinite alternate;
+}
+
+.promo-badge-hero strong {
+  color: var(--color-gold-light);
+  font-weight: 700;
+}
+
+.badge-sparkle {
+  font-size: 1rem;
+}
+
+.highlight-discount {
+  color: var(--color-gold);
+  font-size: 1.05em;
+  font-weight: 800;
+}
+
+@keyframes floatAndGlow {
+  0% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 4px 16px rgba(201, 169, 97, 0.15);
+  }
+  100% {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 8px 28px rgba(201, 169, 97, 0.45);
+  }
 }
 
 /* ─── Category Grid ─── */
