@@ -172,6 +172,23 @@
                 <input class="form-input" type="text" id="field-district" name="district" placeholder="e.g. Dhaka" required autocomplete="address-level2">
                 <p class="field-error" id="error-district">Please enter your district.</p>
               </div>
+              <div class="form-group">
+                <span class="form-label" style="margin-bottom:var(--space-sm);display:block;">Delivery Location</span>
+                <label class="payment-option" id="delivery-inside" style="margin-bottom:8px;">
+                  <input type="radio" name="delivery-location" value="inside" checked>
+                  <span>
+                    <span style="display:block;font-weight:600;">Inside Dhaka</span>
+                    <span class="payment-desc">Delivery fee: ৳70</span>
+                  </span>
+                </label>
+                <label class="payment-option" id="delivery-outside">
+                  <input type="radio" name="delivery-location" value="outside">
+                  <span>
+                    <span style="display:block;font-weight:600;">Outside Dhaka</span>
+                    <span class="payment-desc">Delivery fee: ৳130</span>
+                  </span>
+                </label>
+              </div>
             </div>
 
             <!-- ─── Payment Method ─── -->

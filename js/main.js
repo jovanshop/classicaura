@@ -1384,8 +1384,36 @@ function renderProductCards(grid, products) {
    CART PAGE
    ════════════════════════════════════════════ */
 
-const DELIVERY_FEE = 60;
+const DELIVERY_FEE_INSIDE = 70;
+const DELIVERY_FEE_OUTSIDE = 130;
 const FREE_SHIPPING_THRESHOLD = 2000;
+
+function getDeliveryFee() {
+  var loc = sessionStorage.getItem('classicAura_deliveryLocation') || 'inside';
+  return loc === 'inside' ? DELIVERY_FEE_INSIDE : DELIVERY_FEE_OUTSIDE;
+}
+
+function initDeliveryLocation() {
+  var radios = document.querySelectorAll('input[name="delivery-location"]');
+  if (!radios.length) return;
+
+  // Restore saved selection
+  var saved = sessionStorage.getItem('classicAura_deliveryLocation');
+  if (saved === 'outside') {
+    var outsideEl = document.getElementById('delivery-outside');
+    if (outsideEl) { outsideEl.classList.add('active'); var inp = outsideEl.querySelector('input'); if (inp) inp.checked = true; }
+  } else {
+    var insideEl = document.getElementById('delivery-inside');
+    if (insideEl) { insideEl.classList.add('active'); var inp = insideEl.querySelector('input'); if (inp) inp.checked = true; }
+  }
+
+  radios.forEach(function(r) {
+    r.addEventListener('change', function() {
+      sessionStorage.setItem('classicAura_deliveryLocation', r.value);
+      renderCheckoutSummary();
+    });
+  });
+}
 
 function initCartPage() {
   const container = document.getElementById('cart-items-container');
@@ -1754,20 +1782,21 @@ function updateCartTotals() {
   const discount = getDiscountActive();
   const effectiveSubtotal = discount ? Math.round(rawSubtotal * (1 - DISCOUNT_RATE)) : rawSubtotal;
   const discountAmount = rawSubtotal - effectiveSubtotal;
-  const delivery = cart.length > 0 && effectiveSubtotal < FREE_SHIPPING_THRESHOLD ? DELIVERY_FEE : 0;
-  const total = effectiveSubtotal + delivery;
+  var fee = getDeliveryFee();
+  var delivery = cart.length > 0 && effectiveSubtotal < FREE_SHIPPING_THRESHOLD ? fee : 0;
+  var total = effectiveSubtotal + delivery;
 
-  const subtotalEl = document.getElementById('cart-subtotal');
-  const discountRow = document.getElementById('discount-row');
-  const discountEl = document.getElementById('cart-discount');
-  const deliveryEl = document.getElementById('cart-delivery');
-  const totalEl = document.getElementById('cart-total');
+  var subtotalEl = document.getElementById('cart-subtotal');
+  var discountRow = document.getElementById('discount-row');
+  var discountEl = document.getElementById('cart-discount');
+  var deliveryEl = document.getElementById('cart-delivery');
+  var totalEl = document.getElementById('cart-total');
 
-  if (subtotalEl) subtotalEl.textContent = `৳ ${rawSubtotal.toLocaleString('en-BN')}`;
+  if (subtotalEl) subtotalEl.textContent = '৳ ' + rawSubtotal.toLocaleString('en-BN');
   if (discountRow) discountRow.style.display = discount && discountAmount > 0 ? 'flex' : 'none';
-  if (discountEl && discountAmount > 0) discountEl.textContent = `−৳ ${discountAmount.toLocaleString('en-BN')}`;
-  if (deliveryEl) deliveryEl.textContent = delivery > 0 ? `৳ ${delivery}` : '৳ 0';
-  if (totalEl) totalEl.textContent = `৳ ${total.toLocaleString('en-BN')}`;
+  if (discountEl && discountAmount > 0) discountEl.textContent = '−৳ ' + discountAmount.toLocaleString('en-BN');
+  if (deliveryEl) deliveryEl.textContent = delivery > 0 ? '৳ ' + delivery : '৳ 0';
+  if (totalEl) totalEl.textContent = '৳ ' + total.toLocaleString('en-BN');
 }
 
 /* ════════════════════════════════════════════
@@ -1798,6 +1827,9 @@ function initCheckoutPage() {
 
   // ── Checkout countdown timer (15 min) ──
   initCheckoutTimer();
+
+  // Delivery location radio buttons
+  initDeliveryLocation();
 
   // Meta Pixel: InitiateCheckout
   if (typeof fbq === 'function') {
@@ -1895,20 +1927,26 @@ function updateCheckoutShippingBar(cartTotal) {
 }
 
 function renderCheckoutSummary() {
-  const cart = getCart();
-  const itemsContainer = document.getElementById('checkout-summary-items');
-  const subtotalEl = document.getElementById('checkout-subtotal');
-  const deliveryEl = document.getElementById('checkout-delivery');
-  const totalEl = document.getElementById('checkout-total');
+  var cart = getCart();
+  var itemsContainer = document.getElementById('checkout-summary-items');
+  var subtotalEl = document.getElementById('checkout-subtotal');
+  var deliveryEl = document.getElementById('checkout-delivery');
+  var totalEl = document.getElementById('checkout-total');
 
   if (!itemsContainer) return;
 
-  const subtotal = cart.reduce(
-    (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1),
+  var subtotal = cart.reduce(
+    function(sum, item) { return sum + (Number(item.price) || 0) * (Number(item.quantity) || 1); },
     0
   );
-  const delivery = cart.length > 0 && subtotal < FREE_SHIPPING_THRESHOLD ? DELIVERY_FEE : 0;
-  const total = subtotal + delivery;
+  var loc = sessionStorage.getItem('classicAura_deliveryLocation') || 'inside';
+  var deliveryLabel = 'Delivery' + (loc === 'inside' ? ' (Inside Dhaka)' : ' (Outside Dhaka)');
+  var fee = getDeliveryFee();
+  var delivery = cart.length > 0 && subtotal < FREE_SHIPPING_THRESHOLD ? fee : 0;
+  var total = subtotal + delivery;
+
+  var deliveryLabelEl = deliveryEl?.closest('.summary-row')?.querySelector('.label');
+  if (deliveryLabelEl) deliveryLabelEl.textContent = deliveryLabel;
 
   itemsContainer.innerHTML = cart
     .map((item) => {
@@ -1941,7 +1979,7 @@ function validateCheckoutForm() {
 
   const fields = [
     { id: 'field-name', errorId: 'error-name', test: (v) => v.trim().length >= 2 },
-    { id: 'field-phone', errorId: 'error-phone', test: (v) => /^01[3-9]\d{8}$/.test(v.trim()) },
+    { id: 'field-phone', errorId: 'error-phone', test: function(v) { var c = v.trim().replace(/^(?:\+?880)/, ''); return /^01[3-9]\d{8}$/.test(c); } },
     { id: 'field-email', errorId: 'error-email', test: (v) => !v.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) },
     { id: 'field-address', errorId: 'error-address', test: (v) => v.trim().length >= 5 },
     { id: 'field-district', errorId: 'error-district', test: (v) => v.trim().length >= 2 },
@@ -1976,12 +2014,13 @@ function submitOrder() {
   const orderId = `CA-${orderNum}`;
 
   // Calculate totals
-  const subtotal = cart.reduce(
-    (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1),
+  var subtotal = cart.reduce(
+    function(sum, item) { return sum + (Number(item.price) || 0) * (Number(item.quantity) || 1); },
     0
   );
-  const delivery = cart.length > 0 && subtotal < FREE_SHIPPING_THRESHOLD ? DELIVERY_FEE : 0;
-  const total = subtotal + delivery;
+  var fee = getDeliveryFee();
+  var delivery = cart.length > 0 && subtotal < FREE_SHIPPING_THRESHOLD ? fee : 0;
+  var total = subtotal + delivery;
 
   // Get payment method
   const paymentRadio = document.querySelector('input[name="payment"]:checked');
@@ -2026,8 +2065,14 @@ function submitOrder() {
   }
 
   if (confirmedSubtotal) confirmedSubtotal.textContent = `৳ ${subtotal.toLocaleString('en-BN')}`;
-  if (confirmedDelivery) confirmedDelivery.textContent = delivery > 0 ? `৳ ${delivery}` : '৳ 0';
-  if (confirmedTotal) confirmedTotal.textContent = `৳ ${total.toLocaleString('en-BN')}`;
+  if (confirmedDelivery) confirmedDelivery.textContent = delivery > 0 ? '৳ ' + delivery : '৳ 0';
+  var confirmedDL = document.getElementById('confirmed-delivery');
+  var confirmedLabelEl = confirmedDL?.closest('.summary-row')?.querySelector('.label');
+  if (confirmedLabelEl && confirmedLabelEl.textContent === 'Delivery') {
+    var locConfirm = sessionStorage.getItem('classicAura_deliveryLocation') || 'inside';
+    confirmedLabelEl.textContent = 'Delivery' + (locConfirm === 'inside' ? ' (Inside Dhaka)' : ' (Outside Dhaka)');
+  }
+  if (confirmedTotal) confirmedTotal.textContent = '৳ ' + total.toLocaleString('en-BN');
 
   // Clear cart
   saveCart([]);
