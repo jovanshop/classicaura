@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initHamburgerMenu();
   initStickyHeader();
   initTopBanner();
+  initCategoryDropdown();
   updateCartBadge();
   renderBestSellers();
   initScrollFade();
@@ -99,6 +100,27 @@ function initStickyHeader() {
   );
 
   updateHeader();
+}
+
+/* ─── Category Dropdown ─── */
+function initCategoryDropdown() {
+  const dropdown = document.getElementById('category-dropdown');
+  const btn = dropdown?.querySelector('.category-menu-btn');
+  const menu = document.getElementById('category-menu');
+  if (!dropdown || !btn || !menu) return;
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = menu.classList.toggle('open');
+    btn.setAttribute('aria-expanded', isOpen);
+  });
+
+  document.addEventListener('click', () => {
+    menu.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+  });
+
+  menu.addEventListener('click', (e) => e.stopPropagation());
 }
 
 /* ─── Top Announcement Banner ─── */

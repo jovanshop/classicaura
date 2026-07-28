@@ -483,6 +483,64 @@ textarea.form-input {
 }
 
 .cart-badge.visible {
+  display: inline-flex;
+  pointer-events: auto;
+}
+
+/* ─── Category Dropdown ─── */
+.category-dropdown {
+  position: relative;
+}
+
+.category-menu-btn svg {
+  pointer-events: none;
+}
+
+.category-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  min-width: 160px;
+  list-style: none;
+  padding: var(--space-xs) 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity var(--transition-fast), transform var(--transition-fast), visibility var(--transition-fast);
+  z-index: 100;
+}
+
+.category-dropdown-menu.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.category-dropdown-menu li {
+  margin: 0;
+}
+
+.category-dropdown-menu a {
+  display: block;
+  padding: 10px 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-charcoal);
+  text-decoration: none;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.category-dropdown-menu a:hover {
+  background: rgba(201, 169, 97, 0.08);
+  color: var(--color-gold);
+}
+
+.cart-badge.visible {
   display: block;
 }
 
