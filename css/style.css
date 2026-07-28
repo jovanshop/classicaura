@@ -610,69 +610,7 @@ textarea.form-input {
   transform: translateY(-7px) rotate(-45deg);
 }
 
-/* Mobile menu overlay */
-.mobile-nav-panel {
-  display: none;
-  position: fixed;
-  top: var(--header-height);
-  left: 0;
-  width: 100%;
-  bottom: 0;
-  background: rgba(250, 247, 242, 0.97);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  z-index: 999;
-  flex-direction: column;
-  padding: var(--space-xl);
-  overflow-y: auto;
-}
 
-.mobile-nav-panel.open {
-  display: flex;
-}
-
-.mobile-nav-panel a {
-  font-family: var(--font-heading);
-  font-size: 1.375rem;
-  font-weight: 500;
-  color: var(--color-charcoal);
-  text-decoration: none;
-  padding: var(--space-md) 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  transition: color var(--transition-fast);
-}
-
-.mobile-nav-panel a:hover {
-  color: var(--color-gold);
-}
-
-.mobile-nav-panel .sale-badge {
-  font-size: 0.75rem;
-  padding: 3px 10px;
-  margin-left: 8px;
-}
-
-/* Mobile dropdown submenu */
-.mobile-submenu {
-  padding-left: var(--space-md);
-  display: none;
-  flex-direction: column;
-}
-
-.mobile-submenu.open {
-  display: flex;
-}
-
-.mobile-submenu a {
-  font-family: var(--font-body);
-  font-size: 1rem;
-  font-weight: 400;
-  padding: var(--space-sm) 0;
-}
-
-.mobile-menu a:hover {
-  color: var(--color-gold);
-}
 
 /* ─── Footer ─── */
 .footer {
@@ -3516,6 +3454,57 @@ textarea.form-input {
 @media (max-width: 768px) {
   .nav {
     display: none;
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    width: 100%;
+    bottom: 0;
+    background: rgba(250, 247, 242, 0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 999;
+    padding: var(--space-xl);
+    overflow-y: auto;
+  }
+
+  .nav.open {
+    display: block;
+  }
+
+  .nav ul {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .nav li {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  .nav a {
+    display: block;
+    font-family: var(--font-heading);
+    font-size: 0.938rem;
+    font-weight: 500;
+    padding: var(--space-md) 0;
+  }
+
+  .nav-dropdown-menu {
+    position: static;
+    box-shadow: none;
+    border: none;
+    padding-left: var(--space-md);
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .nav-dropdown-menu a {
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 400;
+    padding: var(--space-sm) 0;
   }
 
   .nav-toggle {
