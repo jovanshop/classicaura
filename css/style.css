@@ -490,6 +490,26 @@ textarea.form-input {
 /* ─── Category Dropdown ─── */
 .category-dropdown {
   position: relative;
+  margin-left: var(--space-sm);
+}
+
+.category-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--color-charcoal);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.category-menu-btn:hover {
+  background: rgba(201, 169, 97, 0.12);
+  color: var(--color-gold);
 }
 
 .category-menu-btn svg {
@@ -499,7 +519,7 @@ textarea.form-input {
 .category-dropdown-menu {
   position: absolute;
   top: 100%;
-  right: 0;
+  left: 0;
   margin-top: 8px;
   background: var(--color-white);
   border: 1px solid var(--color-gray-200);
