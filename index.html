@@ -61,40 +61,46 @@
 <body>
 
   <!-- ════════════════════════════════════════════
-       START REUSABLE HEADER
+       START SITE HEADER
        ════════════════════════════════════════════ -->
-  <header class="header">
+  <header class="site-header">
     <div class="header-inner">
       <a href="index.html" class="logo">Classic Aura</a>
-
-      <div class="category-dropdown" id="category-dropdown">
-        <button class="category-menu-btn" aria-label="Browse categories" aria-haspopup="true" aria-expanded="false">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="3" y1="12" x2="21" y2="12"/>
-            <line x1="3" y1="6" x2="21" y2="6"/>
-            <line x1="3" y1="18" x2="21" y2="18"/>
-          </svg>
-        </button>
-        <ul class="category-dropdown-menu" id="category-menu">
-          <li><a href="shop.html?category=fashion">Fashion</a></li>
-          <li><a href="shop.html?category=cosmetics">Cosmetics</a></li>
-        </ul>
-      </div>
 
       <nav class="nav" aria-label="Main navigation">
         <ul>
           <li><a href="index.html">Home</a></li>
-          <li><a href="shop.html">Shop</a></li>
-          <li><a href="about.html">About</a></li>
-          <li><a href="contact.html">Contact</a></li>
+          <li class="nav-dropdown">
+            <a href="shop.html">Shop <span class="dropdown-arrow">&#9662;</span></a>
+            <ul class="nav-dropdown-menu">
+              <li><a href="shop.html?tag=new">New Arrivals</a></li>
+              <li><a href="shop.html?tag=dresses">Dresses</a></li>
+              <li><a href="shop.html?tag=ethnic">Ethnic</a></li>
+              <li><a href="shop.html?tag=western">Western</a></li>
+            </ul>
+          </li>
+          <li><a href="shop.html?category=cosmetics">Cosmetics</a></li>
+          <li>
+            <a href="shop.html?tag=sale" class="sale-link">
+              Sale <span class="sale-badge">40% OFF</span>
+            </a>
+          </li>
+          <li><a href="about.html">About Us</a></li>
         </ul>
       </nav>
 
       <div class="header-actions">
-        <a href="shop.html" class="action-btn search-desktop" aria-label="Search products">
+        <a href="shop.html" class="action-btn" aria-label="Search products">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="11" cy="11" r="8"/>
             <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </a>
+
+        <a href="#" class="action-btn" aria-label="Account">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
           </svg>
         </a>
 
@@ -113,24 +119,29 @@
           <span class="cart-badge" id="cart-count">0</span>
         </a>
 
-        <button class="hamburger" aria-label="Toggle menu">
+        <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
           <span></span>
           <span></span>
           <span></span>
         </button>
       </div>
     </div>
-
-    <div class="mobile-menu" role="dialog" aria-modal="true" aria-label="Navigation menu">
-      <a href="index.html">Home</a>
-      <a href="shop.html">Shop</a>
-      <a href="about.html">About</a>
-      <a href="contact.html">Contact</a>
-    </div>
   </header>
   <!-- ════════════════════════════════════════════
-       END REUSABLE HEADER
+       END SITE HEADER
        ════════════════════════════════════════════ -->
+
+  <div class="mobile-nav-panel" id="mobile-nav-panel" aria-hidden="true">
+    <a href="index.html">Home</a>
+    <a href="shop.html">Shop</a>
+    <a href="shop.html?tag=new">New Arrivals</a>
+    <a href="shop.html?tag=dresses">Dresses</a>
+    <a href="shop.html?tag=ethnic">Ethnic</a>
+    <a href="shop.html?tag=western">Western</a>
+    <a href="shop.html?category=cosmetics">Cosmetics</a>
+    <a href="shop.html?tag=sale">Sale <span class="sale-badge">40% OFF</span></a>
+    <a href="about.html">About Us</a>
+  </div>
 
   <main class="main">
 
