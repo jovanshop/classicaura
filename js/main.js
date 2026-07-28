@@ -8,6 +8,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   initHamburgerMenu();
   initStickyHeader();
+  initTopBanner();
   updateCartBadge();
   renderBestSellers();
   initScrollFade();
@@ -98,6 +99,28 @@ function initStickyHeader() {
   );
 
   updateHeader();
+}
+
+/* ─── Top Announcement Banner ─── */
+function initTopBanner() {
+  const banner = document.getElementById('top-banner');
+  const dismissBtn = document.getElementById('top-banner-dismiss');
+  if (!banner || !dismissBtn) return;
+
+  if (sessionStorage.getItem('banner-dismissed') === 'true') {
+    banner.style.display = 'none';
+    document.documentElement.style.setProperty('--banner-height', '0px');
+    return;
+  }
+
+  dismissBtn.addEventListener('click', () => {
+    sessionStorage.setItem('banner-dismissed', 'true');
+    banner.classList.add('dismissing');
+    document.documentElement.style.setProperty('--banner-height', '0px');
+    banner.addEventListener('animationend', () => {
+      banner.remove();
+    }, { once: true });
+  });
 }
 
 /* ─── Cart ─── */
