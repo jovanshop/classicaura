@@ -266,7 +266,7 @@ const PRODUCTS = [
     price: 1550,
     stock: 7,
     imageSeed: 'maroon-kurti-set',
-    image: 'images/kurti.png',
+    image: 'images/kurti.jpg',
     shortDescription: 'A gorgeous maroon kurti set with intricate floral embroidery, flowy bell sleeves, and delicate pom-pom trim detailing. Paired with a matching straight-cut trouser — perfect for festive occasions, office wear, or everyday elegance.',
     variants: [
       { label: 'L', value: 'L' },
