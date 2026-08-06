@@ -731,6 +731,8 @@ function showProductNotFound(container) {
 }
 
 function getProductImages(product) {
+  // If a product defines its own images array, use it (e.g. per-color gallery)
+  if (product.images && product.images.length) return product.images;
   const seed = product.imageSeed;
   if (!seed) return [product.image];
   return [
@@ -816,10 +818,12 @@ function renderProductPage(product, container) {
   const inWishlist = isInWishlist(product.id);
   const priceFormatted = Number(product.price).toLocaleString('en-BN');
 
-  const variantLabel =
-    product.category === 'fashion' ? 'Size' : 'Shade';
+  const variantType = product.variantType || (product.category === 'fashion' ? 'size' : 'shade');
+  const variantLabel = variantType === 'size' ? 'Size' : variantType === 'color' ? 'Color' : 'Shade';
   const selectedLabel =
-    product.category === 'fashion' ? '— select a size' : '— select a shade';
+    variantType === 'size' ? '— select a size'
+    : variantType === 'color' ? '— select a color'
+    : '— select a shade';
 
   // Meta Pixel: ViewContent
   if (typeof fbq === 'function') {
@@ -986,7 +990,7 @@ function renderProductPage(product, container) {
           </a>` : ''}
         </div>
 
-        <p class="variant-error" id="variant-error">Please select a ${product.category === 'fashion' ? 'size' : 'shade'} before adding to cart.</p>
+        <p class="variant-error" id="variant-error">Please select a ${variantType === 'size' ? 'size' : variantType === 'color' ? 'color' : 'shade'} before adding to cart.</p>
       </div>
     </div>
 
@@ -1006,6 +1010,12 @@ function renderProductPage(product, container) {
             ? 'Available in a range of sizes to ensure the perfect fit. Each piece undergoes rigorous quality control before reaching your door.'
             : 'Free from parabens and sulphates. Cruelty-free and proudly formulated for all skin types.'}</p>
         `}
+        ${product.specs && product.specs.length ? `
+          <h3 class="tab-subheading">Product Details</h3>
+          <ul class="specs-list">
+            ${product.specs.map(s => `<li>${s}</li>`).join('')}
+          </ul>
+        ` : ''}
       </div>
 
       <div class="tab-panel" id="tab-care" role="tabpanel">
@@ -1123,6 +1133,12 @@ function renderProductPage(product, container) {
       addToCartBtn.disabled = false;
       buyNowBtn.disabled = false;
       variantError.classList.remove('visible');
+      // Switch main image to the selected color's image when available
+      const variantData = product.variants.find((v) => v.value === selectedVariant);
+      if (variantData && variantData.image && mainImage) {
+        mainImage.src = variantData.image;
+        mainImage.alt = `${product.name} — ${label}`;
+      }
     });
   });
 
@@ -1171,6 +1187,7 @@ function renderProductPage(product, container) {
       price: product.price,
       image: product.image,
       variant: selectedVariant,
+      variantType: product.variantType || '',
       quantity: quantity,
     };
 
@@ -1193,6 +1210,7 @@ function renderProductPage(product, container) {
       price: product.price,
       image: product.image,
       variant: selectedVariant,
+      variantType: product.variantType || '',
       quantity: quantity,
     };
 
@@ -1700,9 +1718,11 @@ function buildCartItemHTML(item, index) {
   const qty = Number(item.quantity) || 1;
   const lineTotal = price * qty;
   const variantDisplay = item.variant
-    ? item.category === 'fashion'
-      ? `Size: ${item.variant}`
-      : `Shade: ${item.variant}`
+    ? item.variantType === 'color'
+      ? `Color: ${item.variant}`
+      : item.category === 'fashion'
+        ? `Size: ${item.variant}`
+        : `Shade: ${item.variant}`
     : '';
 
   return `

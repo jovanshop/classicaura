@@ -321,4 +321,41 @@ const PRODUCTS = [
     ],
     whatsapp: { enabled: true, phone: '8801924904441' },
   },
+
+  // ─── Pleated Top & Tiered Skirt Set ───
+  {
+    id: 'pleated-top-tiered-skirt-set',
+    name: 'Pleated Top & Tiered Skirt Set',
+    category: 'fashion',
+    price: 1490,
+    originalPrice: 2000,
+    stock: 20,
+    variantType: 'color',
+    image: 'images/top-skirt-set-maroon.jpg',
+    images: [
+      'images/top-skirt-set-maroon.jpg',
+      'images/top-skirt-set-black.jpg',
+      'images/top-skirt-set-purple.jpg',
+      'images/top-skirt-set-red.jpg',
+      'images/top-skirt-set-mustard.jpg',
+    ],
+    shortDescription: 'A perfect blend of style and comfort for the season — this premium top and tiered skirt set features a pintucked top in flowing georgette paired with a flared, lace-trimmed tiered skirt. Elegant enough for outings, gatherings, or a polished everyday look.',
+    fullDescription: [
+      '<strong>Pleated Top &amp; Tiered Skirt Set</strong> is a versatile two-piece that combines effortless elegance with everyday comfort. The pintucked top in flowing georgette drapes beautifully, while the flared, lace-trimmed tiered skirt adds a feminine, polished finish.',
+      'Free size design fits comfortably and flatters a range of body types, making it an easy choice for outings, gatherings, or a refined everyday look.',
+    ],
+    specs: [
+      'Top fabric: premium cherry georgette (soft, skin-friendly drape)',
+      'Skirt fabric: premium Indian georgette',
+      'Fit: Free size (up to 42" bust for the top)',
+      'Skirt length: 38-40 inches',
+    ],
+    variants: [
+      { label: 'Maroon', value: 'maroon', image: 'images/top-skirt-set-maroon.jpg' },
+      { label: 'Black', value: 'black', image: 'images/top-skirt-set-black.jpg' },
+      { label: 'Purple', value: 'purple', image: 'images/top-skirt-set-purple.jpg' },
+      { label: 'Red', value: 'red', image: 'images/top-skirt-set-red.jpg' },
+      { label: 'Mustard', value: 'mustard', image: 'images/top-skirt-set-mustard.jpg' },
+    ],
+  },
 ];

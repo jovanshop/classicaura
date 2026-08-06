@@ -2168,6 +2168,30 @@ textarea.form-input {
   margin-bottom: var(--space-md);
 }
 
+/* Product specs list (description tab) */
+.specs-list {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-md) 0 0;
+}
+
+.specs-list li {
+  position: relative;
+  padding-left: var(--space-md);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--color-gray-600);
+  margin-bottom: var(--space-sm);
+}
+
+.specs-list li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--color-gold);
+  font-weight: 700;
+}
+
 /* ─── Cart Page ─── */
 .cart-layout {
   display: grid;
