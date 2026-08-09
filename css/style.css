@@ -2897,9 +2897,7 @@ textarea.form-input {
 /* Brand story hero */
 .about-hero {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4xl);
-  align-items: center;
+  grid-template-columns: 1fr;
   padding: var(--space-4xl) 0 var(--space-5xl);
 }
 
