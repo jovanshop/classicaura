@@ -20,6 +20,18 @@ document.addEventListener('DOMContentLoaded', () => {
   initAccordions();
 });
 
+/* ─── Service Worker (PWA) ───
+   Registered after load so it never blocks first paint. Path is relative
+   to this page (/classicaura/js/main.js → /classicaura/sw.js) so it works
+   when the site is served from a sub-path. */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('sw.js')
+      .catch((err) => console.warn('Service worker registration failed:', err));
+  });
+}
+
 /* ─── Persistent state keys ─── */
 const STORAGE_KEYS = {
   cart: 'classicAura_cart',
