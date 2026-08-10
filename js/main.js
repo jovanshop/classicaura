@@ -283,13 +283,26 @@ function renderBestSellers() {
     });
   });
 
-  // Card click → product detail page (delegated)
+  // Card click → product detail page (delegated).
+  // The image and name are also real <a href="product.html?id=..."> links, so
+  // right/middle-click "open in new tab" still works natively. For a primary
+  // (left) click anywhere on the card we drive navigation here programmatically
+  // as well, so a click on the image/name/empty area can never be swallowed by
+  // an ancestor handler or overlay — only the Add to Cart / wishlist buttons
+  // are excluded and keep their own behavior.
   container.addEventListener('click', (e) => {
     const card = e.target.closest('.product-card');
     if (!card) return;
-    if (e.target.closest('button') || e.target.closest('a')) return;
+    if (e.target.closest('button')) return;
     const id = card.dataset.productId;
-    if (id) window.location.href = `product.html?id=${id}`;
+    if (!id) return;
+    const link = e.target.closest('a.product-card-image-link, a.product-card-name-link');
+    if (link) {
+      e.preventDefault();
+      window.location.href = link.getAttribute('href');
+    } else {
+      window.location.href = `product.html?id=${id}`;
+    }
   });
 }
 
