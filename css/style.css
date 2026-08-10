@@ -1414,6 +1414,27 @@ textarea.form-input {
   color: var(--color-gold);
 }
 
+/* Homepage best sellers — clickable product cards */
+#best-sellers-grid .product-card {
+  cursor: pointer;
+}
+
+#best-sellers-grid .product-card-image-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+#best-sellers-grid .product-card-name-link {
+  text-decoration: none;
+  color: inherit;
+  display: inline-block;
+}
+
+#best-sellers-grid .product-card-name-link:hover .product-card-name {
+  color: var(--color-gold);
+}
+
 /* Shop empty state */
 .shop-empty {
   display: none;

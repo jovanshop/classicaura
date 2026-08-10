@@ -206,15 +206,25 @@ function renderBestSellers() {
       const inWishlist = isInWishlist(product.id);
       return `
       <div class="product-card fade-in-section" data-product-id="${product.id}">
-        <div class="product-card-image">
-          <img
-            src="${product.image}"
-            alt="${product.name} — Classic Aura"
-            loading="lazy"
-          >
-        </div>
+        <a
+          href="product.html?id=${encodeURIComponent(product.id)}"
+          class="product-card-image-link"
+        >
+          <div class="product-card-image">
+            <img
+              src="${product.image}"
+              alt="${product.name} — Classic Aura"
+              loading="lazy"
+            >
+          </div>
+        </a>
         <div class="product-card-body">
-          <h3 class="product-card-name">${escapeHtml(product.name)}</h3>
+          <a
+            href="product.html?id=${encodeURIComponent(product.id)}"
+            class="product-card-name-link"
+          >
+            <h3 class="product-card-name">${escapeHtml(product.name)}</h3>
+          </a>
           <p class="product-card-price">৳ ${Number(product.price).toLocaleString('en-BN')}</p>
           <div class="product-card-actions">
             <button
@@ -244,7 +254,8 @@ function renderBestSellers() {
     .join('');
 
   container.querySelectorAll('.add-to-cart-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       const id = btn.dataset.productId;
       const product = PRODUCTS.find((p) => p.id === id);
       if (product) addToCart(product);
@@ -252,7 +263,8 @@ function renderBestSellers() {
   });
 
   container.querySelectorAll('.wishlist-btn-card').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       const id = btn.dataset.productId;
       const added = toggleWishlist(id);
       const svg = btn.querySelector('svg');
@@ -269,6 +281,15 @@ function renderBestSellers() {
         showToast('Removed from wishlist');
       }
     });
+  });
+
+  // Card click → product detail page (delegated)
+  container.addEventListener('click', (e) => {
+    const card = e.target.closest('.product-card');
+    if (!card) return;
+    if (e.target.closest('button') || e.target.closest('a')) return;
+    const id = card.dataset.productId;
+    if (id) window.location.href = `product.html?id=${id}`;
   });
 }
 
