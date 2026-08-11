@@ -335,7 +335,7 @@ function renderBestSellers() {
   const products = PRODUCTS.slice(0, 4);
 
   container.innerHTML = products
-    .map((product) => {
+    .map((product, index) => {
       const inWishlist = isInWishlist(product.id);
       return `
       <div class="product-card fade-in-section" data-product-id="${product.id}">
@@ -344,11 +344,7 @@ function renderBestSellers() {
           class="product-card-image-link"
         >
           <div class="product-card-image">
-            <img
-              src="${product.image}"
-              alt="${product.name} — Classic Aura"
-              loading="lazy"
-            >
+            ${buildPicture(product.image, product.name + ' — Classic Aura', index < 2 ? '' : 'loading="lazy"')}
           </div>
         </a>
         <div class="product-card-body">
@@ -742,11 +738,7 @@ function buildShopProductCard(product) {
   <div class="product-card" data-id="${escapeHtml(product.id)}">
     <a href="product.html?id=${encodeURIComponent(product.id)}" class="product-card-image-link">
       <div class="product-card-image">
-        <img
-          src="${product.image}"
-          alt="${escapeHtml(product.name)} — Classic Aura"
-          loading="lazy"
-        >
+        ${buildPicture(product.image, escapeHtml(product.name) + ' — Classic Aura', 'loading="lazy"')}
       </div>
     </a>
     <div class="product-card-body">
@@ -896,6 +888,25 @@ function showProductNotFound(container) {
   `;
 }
 
+/* WebP-aware image markup. Local JPGs get a <picture> with a .webp source
+   and the original JPG as the fallback; external/other sources render as a
+   plain <img> so the picture pattern is only applied where a WebP exists. */
+function getWebpPath(src) {
+  return src && src.indexOf('.jpg') === src.length - 4
+    ? src.slice(0, -4) + '.webp'
+    : null;
+}
+
+function buildPicture(src, alt, extraAttrs) {
+  var attrs = extraAttrs ? ' ' + extraAttrs : '';
+  var webp = getWebpPath(src);
+  if (!webp) return '<img src="' + src + '" alt="' + alt + '"' + attrs + '>';
+  return (
+    '<picture><source srcset="' + webp + '" type="image/webp">' +
+    '<img src="' + src + '" alt="' + alt + '"' + attrs + '></picture>'
+  );
+}
+
 function getProductImages(product) {
   // If a product defines its own images array, use it (e.g. per-color gallery)
   if (product.images && product.images.length) return product.images;
@@ -1039,6 +1050,9 @@ function renderProductPage(product, container) {
   schemaTag.textContent = JSON.stringify(schema);
   document.head.appendChild(schemaTag);
 
+  const mainImageWebp = getWebpPath(images[0]);
+  const mainImageAlt = escapeHtml(product.name) + ' — Classic Aura';
+
   container.innerHTML = `
     <!-- Breadcrumb -->
     <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -1051,10 +1065,9 @@ function renderProductPage(product, container) {
       <!-- ─── Gallery ─── -->
       <div class="product-gallery">
         <div class="main-image">
-          <img id="main-product-image"
-            src="${images[0]}"
-            alt="${escapeHtml(product.name)} — Classic Aura"
-          >
+          ${mainImageWebp
+            ? '<picture><source id="main-product-source" srcset="' + mainImageWebp + '" type="image/webp"><img id="main-product-image" src="' + images[0] + '" alt="' + mainImageAlt + '"></picture>'
+            : '<img id="main-product-image" src="' + images[0] + '" alt="' + mainImageAlt + '">'}
         </div>
         <div class="thumbnail-row" id="thumbnail-row" role="tablist" aria-label="Product image thumbnails">
           ${images
@@ -1066,7 +1079,7 @@ function renderProductPage(product, container) {
               aria-selected="${i === 0 ? 'true' : 'false'}"
               aria-label="View image ${i + 1} of ${images.length}"
             >
-              <img src="${img}" alt="" loading="lazy">
+              ${buildPicture(img, '', 'loading="lazy"')}
             </button>
           `
             )
@@ -1314,6 +1327,11 @@ function renderProductPage(product, container) {
       if (variantData && variantData.image && mainImage) {
         mainImage.src = variantData.image;
         mainImage.alt = `${product.name} — ${label}`;
+        const mainSource = document.getElementById('main-product-source');
+        if (mainSource) {
+          const webp = getWebpPath(variantData.image);
+          if (webp) mainSource.setAttribute('srcset', webp);
+        }
       }
     });
   });
@@ -1500,7 +1518,7 @@ function renderProductCards(grid, products) {
       <div class="product-card" data-id="${escapeHtml(product.id)}">
         <a href="product.html?id=${encodeURIComponent(product.id)}" class="product-card-image-link">
           <div class="product-card-image">
-            <img src="${product.image}" alt="${escapeHtml(product.name)} — Classic Aura" loading="lazy">
+            ${buildPicture(product.image, escapeHtml(product.name) + ' — Classic Aura', 'loading="lazy"')}
           </div>
         </a>
         <div class="product-card-body">
@@ -1939,7 +1957,7 @@ function renderCrossSells() {
   section.style.display = 'block';
   container.innerHTML = suggested.map(function(p) {
     return '<div class="cross-sell-card">' +
-      '<img src="' + (p.image || '') + '" alt="' + esc(p.name) + '" loading="lazy">' +
+      buildPicture(p.image || '', esc(p.name), 'loading="lazy"') +
       '<div class="cs-info">' +
         '<div class="cs-name">' + esc(p.name) + '</div>' +
         '<div class="cs-price">' + buildProductPriceHTML(p) + '</div>' +
@@ -2116,12 +2134,7 @@ function buildCartItemHTML(item, index) {
 
   return `
     <div class="cart-item" data-index="${index}">
-      <img
-        class="cart-item-image"
-        src="${item.image || 'https://picsum.photos/seed/placeholder/200/250'}"
-        alt="${escapeHtml(item.name)}"
-        loading="lazy"
-      >
+      ${buildPicture(item.image || 'https://picsum.photos/seed/placeholder/200/250', escapeHtml(item.name), 'class="cart-item-image" loading="lazy"')}
       <div class="cart-item-details">
         <h4>${escapeHtml(item.name)}</h4>
         ${variantDisplay ? `<p class="cart-item-variant">${escapeHtml(variantDisplay)}</p>` : ''}
@@ -2338,7 +2351,7 @@ function renderCheckoutSummary() {
       const variantDisplay = item.variant || '';
       return `
       <div class="order-summary-item">
-        <img src="${item.image || 'https://picsum.photos/seed/placeholder/100/120'}" alt="${escapeHtml(item.name)}" loading="lazy">
+        ${buildPicture(item.image || 'https://picsum.photos/seed/placeholder/100/120', escapeHtml(item.name), 'loading="lazy"')}
         <div class="order-summary-item-info">
           <div class="item-name">${escapeHtml(item.name)}</div>
           ${variantDisplay ? `<div class="item-variant">${escapeHtml(variantDisplay)}</div>` : ''}
@@ -2434,7 +2447,7 @@ function submitOrder() {
         const variantDisplay = item.variant || '';
         return `
         <div class="order-summary-item">
-          <img src="${item.image || 'https://picsum.photos/seed/placeholder/100/120'}" alt="${escapeHtml(item.name)}" loading="lazy">
+          ${buildPicture(item.image || 'https://picsum.photos/seed/placeholder/100/120', escapeHtml(item.name), 'loading="lazy"')}
           <div class="order-summary-item-info">
             <div class="item-name">${escapeHtml(item.name)}</div>
             ${variantDisplay ? `<div class="item-variant">${escapeHtml(variantDisplay)}</div>` : ''}

@@ -12,7 +12,7 @@
    so they work when the site is served from a sub-path.
 */
 
-const VERSION = 'classic-aura-v2';
+const VERSION = 'classic-aura-v3';
 const CACHE_NAME = VERSION;
 
 /* Core assets to cache on install. Keep this small and stable. */
@@ -32,14 +32,23 @@ const PRECACHE_URLS = [
   './favicon.svg',
   './manifest.json',
   './images/bannar.jpg',
+  './images/bannar.webp',
   './images/covar1.jpg',
+  './images/covar1.webp',
   './images/kurti.jpg',
+  './images/kurti.webp',
   './images/mengo.jpg',
+  './images/mengo.webp',
   './images/top-skirt-set-maroon.jpg',
+  './images/top-skirt-set-maroon.webp',
   './images/top-skirt-set-black.jpg',
+  './images/top-skirt-set-black.webp',
   './images/top-skirt-set-purple.jpg',
+  './images/top-skirt-set-purple.webp',
   './images/top-skirt-set-red.jpg',
+  './images/top-skirt-set-red.webp',
   './images/top-skirt-set-mustard.jpg',
+  './images/top-skirt-set-mustard.webp',
   './images/icon-192.png',
   './images/icon-512.png',
   './images/apple-touch-icon.png',
