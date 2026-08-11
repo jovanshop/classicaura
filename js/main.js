@@ -907,6 +907,33 @@ function buildPicture(src, alt, extraAttrs) {
   );
 }
 
+/* Swap the product-page main image. A <picture>'s <source> (when it matches)
+   always takes precedence over <img src>, so updating the JPG only would not
+   change what is displayed. This keeps the img fallback and the WebP <source>
+   in sync, creating/updating/removing the source element as needed. */
+function swapProductImage(src, alt) {
+  const mainImage = document.getElementById('main-product-image');
+  if (!mainImage) return;
+  mainImage.src = src;
+  if (alt) mainImage.alt = alt;
+  const picture = mainImage.closest('picture');
+  const existing = document.getElementById('main-product-source');
+  const webp = getWebpPath(src);
+  if (webp && picture) {
+    if (existing) {
+      existing.setAttribute('srcset', webp);
+    } else {
+      const s = document.createElement('source');
+      s.id = 'main-product-source';
+      s.type = 'image/webp';
+      s.setAttribute('srcset', webp);
+      picture.insertBefore(s, mainImage);
+    }
+  } else if (existing) {
+    existing.remove();
+  }
+}
+
 function getProductImages(product) {
   // If a product defines its own images array, use it (e.g. per-color gallery)
   if (product.images && product.images.length) return product.images;
@@ -1286,7 +1313,6 @@ function renderProductPage(product, container) {
 
   // Thumbnail clicks
   const thumbnails = container.querySelectorAll('.thumbnail-btn');
-  const mainImage = document.getElementById('main-product-image');
   thumbnails.forEach((btn) => {
     btn.addEventListener('click', () => {
       const index = parseInt(btn.dataset.index, 10);
@@ -1296,7 +1322,7 @@ function renderProductPage(product, container) {
       });
       btn.classList.add('active');
       btn.setAttribute('aria-selected', 'true');
-      mainImage.src = images[index];
+      swapProductImage(images[index]);
     });
   });
 
@@ -1324,14 +1350,8 @@ function renderProductPage(product, container) {
       variantError.classList.remove('visible');
       // Switch main image to the selected color's image when available
       const variantData = product.variants.find((v) => v.value === selectedVariant);
-      if (variantData && variantData.image && mainImage) {
-        mainImage.src = variantData.image;
-        mainImage.alt = `${product.name} — ${label}`;
-        const mainSource = document.getElementById('main-product-source');
-        if (mainSource) {
-          const webp = getWebpPath(variantData.image);
-          if (webp) mainSource.setAttribute('srcset', webp);
-        }
+      if (variantData && variantData.image) {
+        swapProductImage(variantData.image, `${product.name} — ${label}`);
       }
     });
   });

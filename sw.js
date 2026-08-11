@@ -12,7 +12,7 @@
    so they work when the site is served from a sub-path.
 */
 
-const VERSION = 'classic-aura-v3';
+const VERSION = 'classic-aura-v4';
 const CACHE_NAME = VERSION;
 
 /* Core assets to cache on install. Keep this small and stable. */
