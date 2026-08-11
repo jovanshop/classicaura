@@ -16,6 +16,14 @@
   --color-blush: #F2D9D9;
   --color-blush-light: #F8ECEC;
   --color-white: #FFFFFF;
+
+  /* Semantic aliases:
+     --color-surface  → the light "card / panel" background (=== white in light mode).
+     --color-charcoal-solid → the true dark ink used for dark surfaces (footer, bands,
+       active pills) that must STAY dark in both themes. --color-charcoal doubles as body
+       text, so it flips to light in dark mode — deep-ink surfaces must not follow it. */
+  --color-surface: #FFFFFF;
+  --color-charcoal-solid: #1B1B1B;
   --color-error: #C94A4A;
   --color-success: #5A8F5A;
 
@@ -233,7 +241,7 @@ p:last-child { margin-bottom: 0; }
 
 .btn-secondary:hover,
 .btn-secondary:focus-visible {
-  background-color: var(--color-charcoal);
+  background-color: var(--color-charcoal-solid);
   color: var(--color-white);
   transform: translateY(-1px);
 }
@@ -277,7 +285,7 @@ p:last-child { margin-bottom: 0; }
 
 /* ─── Cards ─── */
 .card {
-  background-color: var(--color-white);
+  background-color: var(--color-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
@@ -314,7 +322,7 @@ p:last-child { margin-bottom: 0; }
   padding: 14px 18px;
   border: 1.5px solid var(--color-gray-300);
   border-radius: var(--radius-sm);
-  background-color: var(--color-white);
+  background-color: var(--color-surface);
   font-size: 0.9375rem;
   transition: border-color var(--transition-fast);
   color: var(--color-charcoal);
@@ -554,7 +562,7 @@ textarea.form-input {
 
 /* ─── Footer ─── */
 .footer {
-  background-color: var(--color-charcoal);
+  background-color: var(--color-charcoal-solid);
   color: rgba(255, 255, 255, 0.75);
   padding: var(--space-5xl) 0 var(--space-xl);
   margin-top: auto;
@@ -961,7 +969,7 @@ textarea.form-input {
 
 /* ─── Product Card ─── */
 .product-card {
-  background: var(--color-white);
+  background: var(--color-surface);
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
@@ -1029,7 +1037,7 @@ textarea.form-input {
   height: 38px;
   border-radius: var(--radius-full);
   border: 1.5px solid var(--color-gray-200);
-  background: var(--color-white);
+  background: var(--color-surface);
   transition: all var(--transition-fast);
   color: var(--color-gray-400);
   flex-shrink: 0;
@@ -1068,7 +1076,7 @@ textarea.form-input {
 
 /* ─── Testimonials ─── */
 .testimonial-card {
-  background: var(--color-white);
+  background: var(--color-surface);
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
   box-shadow: var(--shadow-sm);
@@ -1115,7 +1123,7 @@ textarea.form-input {
 
 /* ─── Newsletter Band ─── */
 .newsletter-band {
-  background: var(--color-charcoal);
+  background: var(--color-charcoal-solid);
   border-radius: var(--radius-xl);
   padding: var(--space-4xl) var(--space-2xl);
   text-align: center;
@@ -1198,7 +1206,7 @@ textarea.form-input {
   gap: var(--space-md);
   margin-bottom: var(--space-xl);
   padding: var(--space-md) var(--space-lg);
-  background: var(--color-white);
+  background: var(--color-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
 }
@@ -1266,7 +1274,7 @@ textarea.form-input {
   padding: 7px 18px;
   border-radius: var(--radius-full);
   border: 1.5px solid var(--color-gray-200);
-  background: var(--color-white);
+  background: var(--color-surface);
   font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
@@ -1280,8 +1288,8 @@ textarea.form-input {
 }
 
 .filter-pill.active {
-  background: var(--color-charcoal);
-  border-color: var(--color-charcoal);
+  background: var(--color-charcoal-solid);
+  border-color: var(--color-charcoal-solid);
   color: var(--color-white);
 }
 
@@ -1632,7 +1640,7 @@ textarea.form-input {
   padding: 10px 22px;
   border: 1.5px solid var(--color-gray-200);
   border-radius: var(--radius-sm);
-  background: var(--color-white);
+  background: var(--color-surface);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -1646,8 +1654,8 @@ textarea.form-input {
 }
 
 .variant-btn.active {
-  border-color: var(--color-charcoal);
-  background: var(--color-charcoal);
+  border-color: var(--color-charcoal-solid);
+  background: var(--color-charcoal-solid);
   color: var(--color-white);
 }
 
@@ -1735,7 +1743,7 @@ textarea.form-input {
   padding: 12px;
   border: 1.5px solid var(--color-gray-200);
   border-radius: var(--radius-full);
-  background: var(--color-white);
+  background: var(--color-surface);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -2173,7 +2181,7 @@ textarea.form-input {
   display: flex;
   gap: var(--space-lg);
   padding: var(--space-lg);
-  background: var(--color-white);
+  background: var(--color-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   align-items: center;
@@ -2289,7 +2297,7 @@ textarea.form-input {
 
 /* Cart summary sidebar */
 .cart-summary {
-  background: var(--color-white);
+  background: var(--color-surface);
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
   box-shadow: var(--shadow-sm);
@@ -2631,7 +2639,7 @@ textarea.form-input {
 
 /* Checkout form */
 .checkout-form-section {
-  background: var(--color-white);
+  background: var(--color-surface);
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
   box-shadow: var(--shadow-sm);
@@ -2674,7 +2682,7 @@ textarea.form-input {
   border: 1.5px solid var(--color-gray-200);
   border-radius: var(--radius-sm);
   font-size: 0.9375rem;
-  background: var(--color-white);
+  background: var(--color-surface);
   color: var(--color-charcoal);
   transition: border-color var(--transition-fast);
 }
@@ -2754,8 +2762,8 @@ textarea.form-input {
 }
 
 .payment-option input[type="radio"]:checked {
-  border-color: var(--color-charcoal);
-  background: var(--color-charcoal);
+  border-color: var(--color-charcoal-solid);
+  background: var(--color-charcoal-solid);
   box-shadow: inset 0 0 0 3px var(--color-white);
 }
 
@@ -2774,7 +2782,7 @@ textarea.form-input {
 
 /* Order summary sidebar */
 .order-summary-panel {
-  background: var(--color-white);
+  background: var(--color-surface);
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
   box-shadow: var(--shadow-sm);
@@ -2869,7 +2877,7 @@ textarea.form-input {
 }
 
 .order-confirmed .order-details {
-  background: var(--color-white);
+  background: var(--color-surface);
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
   box-shadow: var(--shadow-sm);
@@ -2947,7 +2955,7 @@ textarea.form-input {
 }
 
 .mission-card {
-  background: var(--color-white);
+  background: var(--color-surface);
   border-radius: var(--radius-lg);
   padding: var(--space-2xl);
   box-shadow: var(--shadow-sm);
@@ -3096,7 +3104,7 @@ textarea.form-input {
 }
 
 .contact-info-card {
-  background: var(--color-white);
+  background: var(--color-surface);
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
   box-shadow: var(--shadow-sm);
@@ -3206,7 +3214,7 @@ textarea.form-input {
 }
 
 .accordion-panel {
-  background: var(--color-white);
+  background: var(--color-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   margin-bottom: var(--space-md);
@@ -3670,4 +3678,85 @@ textarea.form-input {
   .map-placeholder {
     height: 220px;
   }
+}
+
+/* ════════════════════════════════════════════
+   DARK MODE
+   Applied as a class on <html> (.dark-mode).
+   All theming is driven by the CSS variables below — one
+   refined warm palette that keeps the gold brand accent and
+   warm off-white text on deep charcoal surfaces (no flat black).
+   ════════════════════════════════════════════ */
+
+:root.dark-mode {
+  /* Surfaces & page background (warm deep charcoal, not pure black) */
+  --color-ivory: #15120F;
+  --color-surface: #221D16;
+  --color-gray-100: #1F1A14;
+  --color-gray-200: #26211A;
+
+  /* Lines / borders */
+  --color-gray-300: #3A3329;
+
+  /* Muted → prominent text (brightness inverted from light for contrast) */
+  --color-gray-400: #6E6654;
+  --color-gray-500: #A49A88;
+  --color-gray-600: #BFB5A4;
+
+  /* Body / heading text: warm off-white */
+  --color-charcoal: #EDE6D8;
+
+  /* Warm dark tints for the blush accents */
+  --color-blush: #392B2B;
+  --color-blush-light: #342825;
+
+  /* Brighter status colors for contrast on dark */
+  --color-error: #E06F68;
+  --color-success: #68AE68;
+
+  /* --color-white stays #FFFFFF (text on hero images + on gold/charcoal).
+     --color-gold / gold-light / gold-dark stay unchanged (brand identity).
+     --color-charcoal-solid stays #1B1B1B (footer, bands, active pills). */
+
+  /* Deeper shadows for dark depth */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.55);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
+}
+
+/* Sticky glass header → dark glass in dark mode.
+   The white rgba() overlay only belongs to the light theme. */
+:root.dark-mode .site-header {
+  background: rgba(21, 18, 14, 0.92);
+  border-bottom-color: rgba(201, 169, 97, 0.18);
+}
+
+/* Status colors need a lighter tint to read on charcoal */
+:root.dark-mode .shipping-progress-fill.completed {
+  background: #5FA65F;
+}
+:root.dark-mode .shipping-message.success {
+  color: #72BB72;
+}
+:root.dark-mode .stock-indicator.stock-urgent,
+:root.dark-mode .stock-indicator.stock-urgent svg {
+  color: #D6895E;
+}
+
+/* Keep the "selected" filter pill legible on a dark page
+   (filled charcoal chip outlined in gold) */
+:root.dark-mode .filter-pill.active {
+  border-color: var(--color-gold);
+}
+
+/* ─── Dark mode toggle button ─── */
+.dark-mode-toggle .icon-sun {
+  display: none;
+}
+:root.dark-mode .dark-mode-toggle .icon-moon {
+  display: none;
+}
+:root.dark-mode .dark-mode-toggle .icon-sun {
+  display: block;
 }

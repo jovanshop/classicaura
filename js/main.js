@@ -18,7 +18,49 @@ document.addEventListener('DOMContentLoaded', () => {
   initCheckoutPage();
   initContactPage();
   initAccordions();
+  initDarkModeToggle();
 });
+
+/* ─── Dark Mode Toggle ───
+   Preference is persisted to localStorage so the choice survives across
+   pages and reloads. Defaults to an explicit light mode (no system-pref
+   detection). The class is applied on <html>; the small inline script in each
+   page's <head> pre-applies it from storage to avoid a flash before paint. This
+   function keeps the toggle button's aria-pressed state in sync and handles
+   the click. */
+const THEME_KEY = 'classicAura_theme';
+
+function initDarkModeToggle() {
+  const root = document.documentElement;
+  const toggle = document.getElementById('dark-mode-toggle');
+
+  function apply(theme) {
+    const isDark = theme === 'dark';
+    root.classList.toggle('dark-mode', isDark);
+    if (toggle) toggle.setAttribute('aria-pressed', String(isDark));
+  }
+
+  // Read stored preference (default light). The head snippet already applied
+  // the class pre-paint — here we simply reconcile the button state.
+  let stored = 'light';
+  try {
+    stored = localStorage.getItem(THEME_KEY) || 'light';
+  } catch (e) {
+    /* storage unavailable (private mode) — fall back to light */
+  }
+  apply(stored);
+
+  if (!toggle) return;
+  toggle.addEventListener('click', () => {
+    const next = root.classList.contains('dark-mode') ? 'light' : 'dark';
+    try {
+      localStorage.setItem(THEME_KEY, next);
+    } catch (e) {
+      /* ignore write failures */
+    }
+    apply(next);
+  });
+}
 
 /* ─── Service Worker (PWA) ───
    Registered after load so it never blocks first paint. Path is relative
