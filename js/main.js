@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initContactPage();
   initAccordions();
   initDarkModeToggle();
+  initSaleCountdown();
 });
 
 /* ─── Dark Mode Toggle ───
@@ -72,6 +73,72 @@ if ('serviceWorker' in navigator) {
       .register('sw.js')
       .catch((err) => console.warn('Service worker registration failed:', err));
   });
+}
+
+/* ─── Sale Countdown (homepage hero) ───
+   Evergreen 2-hour rolling countdown. On first load we store an end time of
+   "now + 2 hours" in localStorage; every later load reads that stored time and
+   continues counting down from where it should be, so reloading or navigating
+   never resets it. When it hits zero it silently rolls into a fresh 2-hour
+   window — it never shows 0 or a broken value. No calendar date to edit: the
+   window length is the single constant below. */
+const SALE_WINDOW_MS = 2 * 60 * 60 * 1000; // 2 hours
+const SALE_END_KEY = 'classicAura_saleEndTime';
+
+function getSaleEndTime() {
+  // Read the stored end time; if none exists or it has expired, create a
+  // fresh "now + 2 hours" window and persist it.
+  let end = 0;
+  try {
+    end = parseInt(localStorage.getItem(SALE_END_KEY), 10) || 0;
+  } catch (e) {
+    /* storage unavailable (private mode) — fall through to a fresh window */
+  }
+  if (!end || end <= Date.now()) {
+    end = Date.now() + SALE_WINDOW_MS;
+    try {
+      localStorage.setItem(SALE_END_KEY, String(end));
+    } catch (e) {
+      /* ignore write failures */
+    }
+  }
+  return end;
+}
+
+function initSaleCountdown() {
+  const countdownText = document.getElementById('sale-countdown');
+  const display = document.getElementById('countdown-display');
+  if (!countdownText || !display) return; // homepage only
+
+  let endTime = getSaleEndTime();
+
+  function rollOver() {
+    endTime = Date.now() + SALE_WINDOW_MS;
+    try {
+      localStorage.setItem(SALE_END_KEY, String(endTime));
+    } catch (e) {
+      /* ignore write failures */
+    }
+  }
+
+  const pad = (n) => String(n).padStart(2, '0');
+
+  function tick() {
+    let diff = endTime - Date.now();
+    if (diff <= 0) {
+      rollOver(); // seamless loop into a fresh 2 hours
+      diff = SALE_WINDOW_MS;
+    }
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    // Max 2-hour window, so no days unit — hide hours when zero:
+    // "1h 42m 18s" → "42m 18s"
+    display.textContent = h > 0 ? `${h}h ${pad(m)}m ${pad(s)}s` : `${m}m ${pad(s)}s`;
+  }
+
+  setInterval(tick, 1000); // single interval, cleared on page unload
+  tick(); // render immediately — don't wait a full second
 }
 
 /* ─── Persistent state keys ─── */

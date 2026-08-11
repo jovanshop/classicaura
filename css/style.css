@@ -871,48 +871,11 @@ textarea.form-input {
   line-height: 1.6;
 }
 
-/* ─── Hero Promo Badge ─── */
-.promo-badge-hero {
-  display: inline-block;
-  background: rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1.5px solid rgba(212, 175, 55, 0.65);
-  color: var(--color-white);
-  padding: 8px 24px;
-  border-radius: 999px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin-bottom: var(--space-lg);
-  animation: floatAndGlow 3s ease-in-out infinite alternate;
-}
-
-.promo-badge-hero strong {
-  color: var(--color-gold-light);
-  font-weight: 700;
-}
-
-.badge-sparkle {
-  font-size: 1rem;
-}
-
+/* ─── Discount Highlight ─── */
 .highlight-discount {
   color: var(--color-gold);
   font-size: 1.05em;
   font-weight: 800;
-}
-
-@keyframes floatAndGlow {
-  0% {
-    transform: translateY(0) scale(1);
-    box-shadow: 0 4px 16px rgba(201, 169, 97, 0.15);
-  }
-  100% {
-    transform: translateY(-5px) scale(1.02);
-    box-shadow: 0 8px 28px rgba(201, 169, 97, 0.45);
-  }
 }
 
 /* ─── Category Grid ─── */
@@ -3759,4 +3722,24 @@ textarea.form-input {
 }
 :root.dark-mode .dark-mode-toggle .icon-sun {
   display: block;
+}
+
+/* ─── Sale Countdown (hero promo) ───
+   Sits just beneath the hero promo badge, above the h1.
+   tabular-nums keeps the digits from shifting width every second. */
+.sale-countdown {
+  color: var(--color-white);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin-top: -14px;
+  margin-bottom: var(--space-lg);
+}
+
+.sale-countdown #countdown-display {
+  color: var(--color-gold-light);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
