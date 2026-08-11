@@ -3739,7 +3739,8 @@ textarea.form-input {
 }
 
 .sale-countdown #countdown-display {
-  color: var(--color-gold-light);
+  color: #B23A48; /* refined crimson — legible against the busy hero image */
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }

@@ -4,22 +4,33 @@
 
 'use strict';
 
+/* Runs an init function defensively: a throw in any one initializer must
+   never stop the rest of the page (e.g. the hero countdown) from starting.
+   Failures are logged to the console for diagnostics. */
+function safeInit(fn) {
+  try {
+    fn();
+  } catch (err) {
+    console.error('[classic-aura] init failed:', err);
+  }
+}
+
 /* ─── DOM Ready ─── */
 document.addEventListener('DOMContentLoaded', () => {
-  initHamburgerMenu();
-  initStickyHeader();
-  updateCartBadge();
-  renderBestSellers();
-  initScrollFade();
-  initNewsletterForms();
-  initShopPage();
-  initProductPage();
-  initCartPage();
-  initCheckoutPage();
-  initContactPage();
-  initAccordions();
-  initDarkModeToggle();
-  initSaleCountdown();
+  safeInit(initHamburgerMenu);
+  safeInit(initStickyHeader);
+  safeInit(updateCartBadge);
+  safeInit(renderBestSellers);
+  safeInit(initScrollFade);
+  safeInit(initNewsletterForms);
+  safeInit(initShopPage);
+  safeInit(initProductPage);
+  safeInit(initCartPage);
+  safeInit(initCheckoutPage);
+  safeInit(initContactPage);
+  safeInit(initAccordions);
+  safeInit(initDarkModeToggle);
+  safeInit(initSaleCountdown);
 });
 
 /* ─── Dark Mode Toggle ───
