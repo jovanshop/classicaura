@@ -408,6 +408,45 @@
        END REUSABLE FOOTER
        ════════════════════════════════════════════ -->
 
+  <!-- ─── Welcome / Sign-in Offer Popup ───
+       Shown once on load for visitors who haven't signed in and haven't
+       dismissed it. Signing in unlocks a sitewide 10% discount. -->
+  <div class="welcome-popup-overlay" id="welcome-popup-overlay" hidden>
+    <div
+      class="welcome-popup"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="welcome-popup-title"
+    >
+      <button
+        type="button"
+        class="welcome-popup-close"
+        id="welcome-popup-close"
+        aria-label="Close welcome offer"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 6 6 18"/>
+          <path d="m6 6 12 12"/>
+        </svg>
+      </button>
+
+      <span class="welcome-popup-eyebrow">Classic Aura</span>
+      <h2 id="welcome-popup-title">Welcome to Classic Aura</h2>
+      <p class="welcome-popup-text">
+        Sign in with Google to unlock an exclusive
+        <strong>10% off</strong> every product — sitewide, every time you shop.
+      </p>
+
+      <!-- Google Identity Services button (rendered by main.js) -->
+      <div id="g_id_signin_container"></div>
+
+      <p class="welcome-popup-note">
+        We'll never post on your behalf. Your sign-in is used only to apply
+        your discount.
+      </p>
+    </div>
+  </div>
+
   <script src="js/products.js"></script>
   <script src="js/main.js"></script>
   <!--Start of Tawk.to Script-->

@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
   safeInit(initAccordions);
   safeInit(initDarkModeToggle);
   safeInit(initSaleCountdown);
+  safeInit(initWelcomePopup);
 });
 
 /* ─── Dark Mode Toggle ───
@@ -357,7 +358,7 @@ function renderBestSellers() {
           >
             <h3 class="product-card-name">${escapeHtml(product.name)}</h3>
           </a>
-          <p class="product-card-price">৳ ${Number(product.price).toLocaleString('en-BN')}</p>
+          <p class="product-card-price">${buildProductPriceHTML(product)}</p>
           <div class="product-card-actions">
             <button
               class="btn btn-sm btn-primary add-to-cart-btn"
@@ -736,7 +737,6 @@ function renderShopProducts() {
 
 function buildShopProductCard(product) {
   const inWishlist = isInWishlist(product.id);
-  const price = Number(product.price).toLocaleString('en-BN');
 
   return `
   <div class="product-card" data-id="${escapeHtml(product.id)}">
@@ -753,7 +753,7 @@ function buildShopProductCard(product) {
       <a href="product.html?id=${encodeURIComponent(product.id)}" class="product-card-name-link">
         <h3 class="product-card-name">${escapeHtml(product.name)}</h3>
       </a>
-      <p class="product-card-price">৳ ${price}</p>
+      <p class="product-card-price">${buildProductPriceHTML(product)}</p>
       <div class="product-card-actions">
         <button
           class="wishlist-btn-card ${inWishlist ? 'active' : ''}"
@@ -983,6 +983,16 @@ function renderProductPage(product, container) {
   const reviews = generateReviews(product);
   const inWishlist = isInWishlist(product.id);
   const priceFormatted = Number(product.price).toLocaleString('en-BN');
+  // Signed-in visitors see the 10% member price with the regular price struck
+  // through; otherwise the standard price (with any originalPrice badge) shows.
+  const priceMarkup = isSignedIn()
+    ? '৳ ' + getDiscountedPrice(product.price).toLocaleString('en-BN') +
+      ' <span class="original">৳' + priceFormatted + '</span>' +
+      ' <span class="discount">10% OFF</span>'
+    : '৳ ' + priceFormatted + (product.originalPrice
+        ? ' <span class="original">৳' + Number(product.originalPrice).toLocaleString('en-BN') +
+          '</span> <span class="discount">' + Math.round((1 - product.price / product.originalPrice) * 100) + '% OFF</span>'
+        : '');
 
   const variantType = product.variantType || (product.category === 'fashion' ? 'size' : 'shade');
   const variantLabel = variantType === 'size' ? 'Size' : variantType === 'color' ? 'Color' : 'Shade';
@@ -1074,7 +1084,7 @@ function renderProductPage(product, container) {
           <span class="review-count">${reviewCount > 0 ? `(${reviewCount} reviews)` : ''}</span>
         </div>
 
-        <p class="product-price">৳ ${priceFormatted}${product.originalPrice ? ' <span class="original">৳' + Number(product.originalPrice).toLocaleString('en-BN') + '</span> <span class="discount">' + Math.round((1 - product.price / product.originalPrice) * 100) + '% OFF</span>' : ''}</p>
+        <p class="product-price">${priceMarkup}</p>
         <p class="product-desc">${escapeHtml(product.shortDescription)}</p>
 
         ${product.benefits ? `
@@ -1392,13 +1402,16 @@ function renderProductPage(product, container) {
       const name = product.name;
       const variant = selectedVariant ? ' (' + selectedVariant + ')' : '';
       const qtyValue = parseInt(qtyInput.value, 10) || 1;
-      const total = product.price * qtyValue;
+      const memberDiscounted = isSignedIn();
+      const unitPrice = memberDiscounted ? getDiscountedPrice(product.price) : product.price;
+      const total = unitPrice * qtyValue;
       const msg =
         'Hi! I\'d like to place an order:\n' +
         '───────────────\n' +
         'Product: ' + name + variant + '\n' +
         'Quantity: ' + qtyValue + '\n' +
-        'Price: ৳' + product.price + ' each (Total: ৳' + total + ')\n' +
+        'Price: ৳' + unitPrice + ' each (Total: ৳' + total + ')' +
+        (memberDiscounted ? ' — 10% member discount applied (was ৳' + product.price + ')' : '') + '\n' +
         '───────────────\n' +
         'Please confirm availability and delivery details.';
       window.open('https://wa.me/' + product.whatsapp.phone + '?text=' + encodeURIComponent(msg), '_blank', 'noopener');
@@ -1483,7 +1496,6 @@ function renderProductCards(grid, products) {
   grid.innerHTML = products
     .map((product) => {
       const inWishlist = isInWishlist(product.id);
-      const price = Number(product.price).toLocaleString('en-BN');
       return `
       <div class="product-card" data-id="${escapeHtml(product.id)}">
         <a href="product.html?id=${encodeURIComponent(product.id)}" class="product-card-image-link">
@@ -1495,7 +1507,7 @@ function renderProductCards(grid, products) {
           <a href="product.html?id=${encodeURIComponent(product.id)}" class="product-card-name-link">
             <h3 class="product-card-name">${escapeHtml(product.name)}</h3>
           </a>
-          <p class="product-card-price">৳ ${price}</p>
+          <p class="product-card-price">${buildProductPriceHTML(product)}</p>
           <div class="product-card-actions">
             <button class="wishlist-btn-card ${inWishlist ? 'active' : ''}" data-id="${escapeHtml(product.id)}" aria-label="${inWishlist ? 'Remove from' : 'Add to'} wishlist">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="${inWishlist ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1636,10 +1648,40 @@ function initCartTimer() {
   }, 1000);
 }
 
-/* ─── Discount state (sessionStorage-backed) ─── */
+/* ─── Discount state (Google sign-in + bundle-banner promo) ───
+   The sitewide 10% member discount is active when the visitor has signed in
+   with Google (persisted in localStorage) OR toggled the bundle-banner promo
+   (sessionStorage). Both apply the same DISCOUNT_RATE, so there is a single,
+   consistent discounted price everywhere. */
+
 var DISCOUNT_RATE = 0.10;
 
+var SIGN_IN_STORAGE_KEY = 'classicAura_signedIn';
+var SIGN_IN_PROFILE_KEY = 'classicAura_signedInProfile';
+var POPUP_DISMISS_KEY = 'classicAura_popupDismissed';
+var GOOGLE_CLIENT_ID = '352967740649-g0ks1mu6h3jrmqk4mc079up78l3bmm35.apps.googleusercontent.com';
+
+function isSignedIn() {
+  try { return localStorage.getItem(SIGN_IN_STORAGE_KEY) === 'true'; } catch (e) { return false; }
+}
+
+function getSignedInProfile() {
+  try {
+    var raw = localStorage.getItem(SIGN_IN_PROFILE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+function isPopupDismissed() {
+  try { return localStorage.getItem(POPUP_DISMISS_KEY) === 'true'; } catch (e) { return false; }
+}
+
+function getDiscountedPrice(price) {
+  return Math.round(Number(price) * (1 - DISCOUNT_RATE));
+}
+
 function getDiscountActive() {
+  if (isSignedIn()) return true;
   var val = sessionStorage.getItem('classicAura_discount');
   return val === 'true';
 }
@@ -1648,15 +1690,195 @@ function setDiscountActive(active) {
   sessionStorage.setItem('classicAura_discount', active ? 'true' : 'false');
 }
 
-function getEffectiveSubtotal() {
+/* Single source of truth for cart pricing. Rounds each line individually so
+   the numbers a customer sees on line items always match the subtotal, the
+   checkout summary, and the WhatsApp/order message. */
+function getCartPricing() {
   var cart = getCart();
-  var raw = cart.reduce(function(sum, item) {
-    return sum + (Number(item.price) || 0) * (Number(item.quantity) || 1);
-  }, 0);
-  if (getDiscountActive()) {
-    return Math.round(raw * (1 - DISCOUNT_RATE));
+  var rawSubtotal = 0;
+  var effectiveSubtotal = 0;
+  var active = getDiscountActive();
+  cart.forEach(function(item) {
+    var price = Number(item.price) || 0;
+    var qty = Number(item.quantity) || 1;
+    rawSubtotal += price * qty;
+    effectiveSubtotal += (active ? getDiscountedPrice(price) : price) * qty;
+  });
+  return {
+    active: active,
+    rawSubtotal: rawSubtotal,
+    effectiveSubtotal: effectiveSubtotal,
+    discountAmount: rawSubtotal - effectiveSubtotal,
+  };
+}
+
+function getEffectiveSubtotal() {
+  return getCartPricing().effectiveSubtotal;
+}
+
+/* ─── Google Sign-In & welcome offer ───
+   On the homepage, a one-time modal invites visitors to sign in with Google
+   for a sitewide 10% discount. The returned ID token is decoded client-side
+   (no backend) purely to personalise the greeting and gate the discount.
+   Dismissals and sign-ins are remembered so the popup never returns. */
+
+function initWelcomePopup() {
+  var overlay = document.getElementById('welcome-popup-overlay');
+  if (!overlay) return; // homepage only
+
+  // Returning visitors who already signed in or chose not to: respect it.
+  if (isSignedIn() || isPopupDismissed()) return;
+
+  var closeBtn = document.getElementById('welcome-popup-close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', function() {
+      dismissWelcomePopup(true);
+    });
   }
-  return raw;
+
+  // Clicking the dark overlay (outside the card) dismisses too.
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) dismissWelcomePopup(true);
+  });
+
+  // Show immediately on load, letting the fade/scale animation play.
+  overlay.removeAttribute('hidden');
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      overlay.classList.add('visible');
+    });
+  });
+  document.body.style.overflow = 'hidden'; // lock page scroll behind modal
+  document.addEventListener('keydown', handlePopupKeydown);
+
+  loadGoogleButton();
+}
+
+function dismissWelcomePopup(rememberDismiss) {
+  var overlay = document.getElementById('welcome-popup-overlay');
+  if (overlay) {
+    overlay.classList.remove('visible');
+    overlay.setAttribute('hidden', '');
+  }
+  document.body.style.overflow = '';
+  document.removeEventListener('keydown', handlePopupKeydown);
+  if (rememberDismiss) {
+    try { localStorage.setItem(POPUP_DISMISS_KEY, 'true'); } catch (e) {}
+  }
+}
+
+function handlePopupKeydown(e) {
+  if (e.key === 'Escape') dismissWelcomePopup(true);
+}
+
+function loadGoogleButton() {
+  var container = document.getElementById('g_id_signin_container');
+  if (!container) return;
+
+  if (window.google && google.accounts) {
+    renderGoogleButton(container);
+    return;
+  }
+
+  var script = document.createElement('script');
+  script.src = 'https://accounts.google.com/gsi/client';
+  script.async = true;
+  script.defer = true;
+  script.onload = function() { renderGoogleButton(container); };
+  document.head.appendChild(script);
+}
+
+function renderGoogleButton(container) {
+  if (!window.google || !google.accounts) return;
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleCredentialResponse,
+    auto_select: false,
+  });
+  google.accounts.id.renderButton(container, {
+    type: 'standard',
+    shape: 'pill',
+    theme: 'outline',
+    text: 'continue_with',
+    size: 'large',
+    width: 280,
+  });
+}
+
+/* GSI calls this with a JWT credential after a successful sign-in. */
+function handleCredentialResponse(response) {
+  var profile = null;
+  if (response && response.credential) {
+    try {
+      var payload = decodeJwt(response.credential);
+      if (payload) {
+        var fullName = payload.name || '';
+        var firstName = payload.given_name || (fullName.split(' ')[0] || '');
+        profile = {
+          name: fullName || firstName || 'Friend',
+          firstName: firstName || 'there',
+          email: payload.email || '',
+          picture: payload.picture || '',
+        };
+      }
+    } catch (e) {
+      console.error('[classic-aura] failed to decode Google credential:', e);
+    }
+  }
+
+  try {
+    localStorage.setItem(SIGN_IN_STORAGE_KEY, 'true');
+    if (profile) localStorage.setItem(SIGN_IN_PROFILE_KEY, JSON.stringify(profile));
+  } catch (e) {}
+
+  dismissWelcomePopup(false); // signed-in state is the memory, not dismissal
+
+  refreshPriceDisplay();
+
+  var greeting = (profile && profile.firstName) || 'there';
+  showToast('You’re in, ' + greeting + '! 10% off is now applied.');
+}
+
+/* Decode the payload of a Google ID token (JWT) without any backend. */
+function decodeJwt(token) {
+  var parts = String(token).split('.');
+  if (parts.length < 2) return null;
+  var b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+  while (b64.length % 4) b64 += '=';
+  try {
+    var json = decodeURIComponent(
+      atob(b64)
+        .split('')
+        .map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join('')
+    );
+    return JSON.parse(json);
+  } catch (e) {
+    return null;
+  }
+}
+
+/* Re-render anything price-bearing on the current page after sign-in
+   (every renderer no-ops when its container isn't present). */
+function refreshPriceDisplay() {
+  renderBestSellers();
+  renderShopProducts();
+  renderCart();
+  renderCrossSells();
+}
+
+/* Price markup for product cards: shows the 10% member price with the regular
+   price struck through when signed in; otherwise the plain price. */
+function buildProductPriceHTML(product) {
+  var price = Number(product.price);
+  var priceStr = price.toLocaleString('en-BN');
+  if (!isSignedIn()) return '৳ ' + priceStr;
+  var discounted = getDiscountedPrice(price);
+  return '৳ ' + discounted.toLocaleString('en-BN') +
+    ' <span class="original">৳' + priceStr + '</span>' +
+    ' <span class="discount">10% OFF</span>';
 }
 
 /* ─── Cross-sell recommendations ─── */
@@ -1716,12 +1938,11 @@ function renderCrossSells() {
 
   section.style.display = 'block';
   container.innerHTML = suggested.map(function(p) {
-    var price = Number(p.price).toLocaleString('en-BN');
     return '<div class="cross-sell-card">' +
       '<img src="' + (p.image || '') + '" alt="' + esc(p.name) + '" loading="lazy">' +
       '<div class="cs-info">' +
         '<div class="cs-name">' + esc(p.name) + '</div>' +
-        '<div class="cs-price">৳ ' + price + '</div>' +
+        '<div class="cs-price">' + buildProductPriceHTML(p) + '</div>' +
       '</div>' +
       '<button class="cs-add-btn" data-cs-id="' + esc(p.id) + '" aria-label="Add ' + esc(p.name) + ' to cart">+</button>' +
     '</div>';
@@ -1882,7 +2103,9 @@ function updateFreeShippingProgressBar(cartTotal) {
 function buildCartItemHTML(item, index) {
   const price = Number(item.price);
   const qty = Number(item.quantity) || 1;
-  const lineTotal = price * qty;
+  const memberDiscounted = isSignedIn();
+  const unitPrice = memberDiscounted ? getDiscountedPrice(price) : price;
+  const lineTotal = unitPrice * qty;
   const variantDisplay = item.variant
     ? item.variantType === 'color'
       ? `Color: ${item.variant}`
@@ -1902,7 +2125,7 @@ function buildCartItemHTML(item, index) {
       <div class="cart-item-details">
         <h4>${escapeHtml(item.name)}</h4>
         ${variantDisplay ? `<p class="cart-item-variant">${escapeHtml(variantDisplay)}</p>` : ''}
-        <p class="cart-item-unit-price">৳ ${price.toLocaleString('en-BN')}</p>
+        <p class="cart-item-unit-price">৳ ${unitPrice.toLocaleString('en-BN')}${memberDiscounted ? `<span class="original">৳${price.toLocaleString('en-BN')}</span>` : ''}</p>
       </div>
       <div class="cart-item-qty" data-index="${index}">
         <button class="qty-minus" aria-label="Decrease quantity" ${qty <= 1 ? 'disabled' : ''}>&minus;</button>
@@ -1944,17 +2167,10 @@ function removeCartItem(index) {
 }
 
 function updateCartTotals() {
-  const cart = getCart();
-  const rawSubtotal = cart.reduce(
-    (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1),
-    0
-  );
-  const discount = getDiscountActive();
-  const effectiveSubtotal = discount ? Math.round(rawSubtotal * (1 - DISCOUNT_RATE)) : rawSubtotal;
-  const discountAmount = rawSubtotal - effectiveSubtotal;
+  var pricing = getCartPricing();
   var fee = getDeliveryFee();
-  var delivery = cart.length > 0 && effectiveSubtotal < FREE_SHIPPING_THRESHOLD ? fee : 0;
-  var total = effectiveSubtotal + delivery;
+  var delivery = getCart().length > 0 && pricing.effectiveSubtotal < FREE_SHIPPING_THRESHOLD ? fee : 0;
+  var total = pricing.effectiveSubtotal + delivery;
 
   var subtotalEl = document.getElementById('cart-subtotal');
   var discountRow = document.getElementById('discount-row');
@@ -1962,9 +2178,9 @@ function updateCartTotals() {
   var deliveryEl = document.getElementById('cart-delivery');
   var totalEl = document.getElementById('cart-total');
 
-  if (subtotalEl) subtotalEl.textContent = '৳ ' + rawSubtotal.toLocaleString('en-BN');
-  if (discountRow) discountRow.style.display = discount && discountAmount > 0 ? 'flex' : 'none';
-  if (discountEl && discountAmount > 0) discountEl.textContent = '−৳ ' + discountAmount.toLocaleString('en-BN');
+  if (subtotalEl) subtotalEl.textContent = '৳ ' + pricing.rawSubtotal.toLocaleString('en-BN');
+  if (discountRow) discountRow.style.display = pricing.active && pricing.discountAmount > 0 ? 'flex' : 'none';
+  if (discountEl && pricing.discountAmount > 0) discountEl.textContent = '−৳ ' + pricing.discountAmount.toLocaleString('en-BN');
   if (deliveryEl) deliveryEl.textContent = delivery > 0 ? '৳ ' + delivery : '৳ 0';
   if (totalEl) totalEl.textContent = '৳ ' + total.toLocaleString('en-BN');
 }
@@ -2003,10 +2219,7 @@ function initCheckoutPage() {
 
   // Meta Pixel: InitiateCheckout
   if (typeof fbq === 'function') {
-    const total = cart.reduce(
-      (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1),
-      0
-    );
+    const total = getCartPricing().effectiveSubtotal;
     fbq('track', 'InitiateCheckout', {
       num_items: cart.length,
       value: total,
@@ -2098,22 +2311,21 @@ function updateCheckoutShippingBar(cartTotal) {
 
 function renderCheckoutSummary() {
   var cart = getCart();
+  var pricing = getCartPricing();
   var itemsContainer = document.getElementById('checkout-summary-items');
   var subtotalEl = document.getElementById('checkout-subtotal');
+  var discountRow = document.getElementById('checkout-discount-row');
+  var discountEl = document.getElementById('checkout-discount');
   var deliveryEl = document.getElementById('checkout-delivery');
   var totalEl = document.getElementById('checkout-total');
 
   if (!itemsContainer) return;
 
-  var subtotal = cart.reduce(
-    function(sum, item) { return sum + (Number(item.price) || 0) * (Number(item.quantity) || 1); },
-    0
-  );
   var loc = sessionStorage.getItem('classicAura_deliveryLocation') || 'inside';
   var deliveryLabel = 'Delivery' + (loc === 'inside' ? ' (Inside Dhaka)' : ' (Outside Dhaka)');
   var fee = getDeliveryFee();
-  var delivery = cart.length > 0 && subtotal < FREE_SHIPPING_THRESHOLD ? fee : 0;
-  var total = subtotal + delivery;
+  var delivery = cart.length > 0 && pricing.effectiveSubtotal < FREE_SHIPPING_THRESHOLD ? fee : 0;
+  var total = pricing.effectiveSubtotal + delivery;
 
   var deliveryLabelEl = deliveryEl?.closest('.summary-row')?.querySelector('.label');
   if (deliveryLabelEl) deliveryLabelEl.textContent = deliveryLabel;
@@ -2122,6 +2334,7 @@ function renderCheckoutSummary() {
     .map((item) => {
       const qty = Number(item.quantity) || 1;
       const price = Number(item.price);
+      const unitPrice = isSignedIn() ? getDiscountedPrice(price) : price;
       const variantDisplay = item.variant || '';
       return `
       <div class="order-summary-item">
@@ -2131,17 +2344,19 @@ function renderCheckoutSummary() {
           ${variantDisplay ? `<div class="item-variant">${escapeHtml(variantDisplay)}</div>` : ''}
           <div class="item-qty">Qty: ${qty}</div>
         </div>
-        <span class="order-summary-item-price">৳ ${(price * qty).toLocaleString('en-BN')}</span>
+        <span class="order-summary-item-price">৳ ${(unitPrice * qty).toLocaleString('en-BN')}</span>
       </div>
     `;
     })
     .join('');
 
-  if (subtotalEl) subtotalEl.textContent = `৳ ${subtotal.toLocaleString('en-BN')}`;
+  if (subtotalEl) subtotalEl.textContent = `৳ ${pricing.rawSubtotal.toLocaleString('en-BN')}`;
+  if (discountRow) discountRow.style.display = pricing.active && pricing.discountAmount > 0 ? 'flex' : 'none';
+  if (discountEl && pricing.discountAmount > 0) discountEl.textContent = '−৳ ' + pricing.discountAmount.toLocaleString('en-BN');
   if (deliveryEl) deliveryEl.textContent = delivery > 0 ? `৳ ${delivery}` : '৳ 0';
   if (totalEl) totalEl.textContent = `৳ ${total.toLocaleString('en-BN')}`;
 
-  updateCheckoutShippingBar(subtotal);
+  updateCheckoutShippingBar(pricing.effectiveSubtotal);
 }
 
 function validateCheckoutForm() {
@@ -2183,14 +2398,11 @@ function submitOrder() {
   const orderNum = String(Math.floor(100000 + Math.random() * 900000));
   const orderId = `CA-${orderNum}`;
 
-  // Calculate totals
-  var subtotal = cart.reduce(
-    function(sum, item) { return sum + (Number(item.price) || 0) * (Number(item.quantity) || 1); },
-    0
-  );
+  // Calculate totals (discount applied when signed in or the bundle promo is active)
+  var pricing = getCartPricing();
   var fee = getDeliveryFee();
-  var delivery = cart.length > 0 && subtotal < FREE_SHIPPING_THRESHOLD ? fee : 0;
-  var total = subtotal + delivery;
+  var delivery = cart.length > 0 && pricing.effectiveSubtotal < FREE_SHIPPING_THRESHOLD ? fee : 0;
+  var total = pricing.effectiveSubtotal + delivery;
 
   // Get payment method
   const paymentRadio = document.querySelector('input[name="payment"]:checked');
@@ -2218,6 +2430,7 @@ function submitOrder() {
       .map((item) => {
         const qty = Number(item.quantity) || 1;
         const price = Number(item.price);
+        const unitPrice = isSignedIn() ? getDiscountedPrice(price) : price;
         const variantDisplay = item.variant || '';
         return `
         <div class="order-summary-item">
@@ -2227,14 +2440,18 @@ function submitOrder() {
             ${variantDisplay ? `<div class="item-variant">${escapeHtml(variantDisplay)}</div>` : ''}
             <div class="item-qty">Qty: ${qty}</div>
           </div>
-          <span class="order-summary-item-price">৳ ${(price * qty).toLocaleString('en-BN')}</span>
+          <span class="order-summary-item-price">৳ ${(unitPrice * qty).toLocaleString('en-BN')}</span>
         </div>
       `;
       })
       .join('');
   }
 
-  if (confirmedSubtotal) confirmedSubtotal.textContent = `৳ ${subtotal.toLocaleString('en-BN')}`;
+  if (confirmedSubtotal) confirmedSubtotal.textContent = `৳ ${pricing.rawSubtotal.toLocaleString('en-BN')}`;
+  var confirmedDiscountRow = document.getElementById('confirmed-discount-row');
+  var confirmedDiscountEl = document.getElementById('confirmed-discount');
+  if (confirmedDiscountRow) confirmedDiscountRow.style.display = pricing.active && pricing.discountAmount > 0 ? 'flex' : 'none';
+  if (confirmedDiscountEl && pricing.discountAmount > 0) confirmedDiscountEl.textContent = '−৳ ' + pricing.discountAmount.toLocaleString('en-BN');
   if (confirmedDelivery) confirmedDelivery.textContent = delivery > 0 ? '৳ ' + delivery : '৳ 0';
   var confirmedDL = document.getElementById('confirmed-delivery');
   var confirmedLabelEl = confirmedDL?.closest('.summary-row')?.querySelector('.label');
@@ -2259,8 +2476,9 @@ function submitOrder() {
     .map((item) => {
       const qty = Number(item.quantity) || 1;
       const price = Number(item.price);
+      const unitPrice = isSignedIn() ? getDiscountedPrice(price) : price;
       const variant = item.variant || '';
-      return `${item.name}${variant ? ` (${variant})` : ''} × ${qty} — ৳${price * qty}`;
+      return `${item.name}${variant ? ` (${variant})` : ''} × ${qty} — ৳${unitPrice * qty}`;
     })
     .join(' | ');
 
