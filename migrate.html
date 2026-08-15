@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Migration | Classic Aura</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f0f13; color: #e0e0e0; min-height: 100vh; line-height: 1.5;
+      display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    .card {
+      background: #1a1a24; border: 1px solid #2a2a3a; border-radius: 20px;
+      padding: 40px; width: 100%; max-width: 460px; box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+    }
+    .card h1 { font-size: 1.4rem; color: #fff; margin-bottom: 4px; }
+    .card h1 span { color: #c9a961; }
+    .card p.sub { color: #888; font-size: 0.875rem; margin-bottom: 24px; }
+    label { display: block; font-size: 0.8125rem; color: #aaa; margin: 16px 0 6px; }
+    input {
+      width: 100%; padding: 12px 14px; background: #0f0f13; border: 1.5px solid #2a2a3a;
+      border-radius: 10px; color: #fff; outline: none; font-size: 0.9375rem;
+    }
+    input:focus { border-color: #c9a961; }
+    button {
+      width: 100%; margin-top: 20px; padding: 13px; background: #c9a961; color: #0f0f13;
+      border: none; border-radius: 12px; font-weight: 600; font-size: 0.9375rem; cursor: pointer;
+    }
+    button:hover { background: #d4b97a; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .status { margin-top: 20px; font-size: 0.875rem; }
+    .status.ok { color: #2ecc71; }
+    .status.err { color: #e74c3c; }
+    .hint { margin-top: 16px; font-size: 0.75rem; color: #666; }
+    #migrate-section { display: none; }
+    #migrate-section.visible { display: block; }
+    #logout-btn {
+      background: transparent; color: #e74c3c; border: 1.5px solid #e74c3c;
+      margin-top: 12px; font-size: 0.8125rem;
+    }
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      background: #c9a96122; color: #c9a961; font-size: 0.75rem; margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Classic Aura <span>Data Migration</span></h1>
+    <p class="sub">One-time import of the static product catalog into Firestore.</p>
+
+    <div id="login-section">
+      <span class="badge">Sign in with your admin account to continue</span>
+      <label for="email">Email</label>
+      <input type="email" id="email" autocomplete="username" placeholder="admin@example.com">
+      <label for="password">Password</label>
+      <input type="password" id="password" autocomplete="current-password" placeholder="••••••••">
+      <button id="login-btn">Sign In</button>
+      <div class="status" id="login-status"></div>
+    </div>
+
+    <div id="migrate-section">
+      <span class="badge" id="who"></span>
+      <p class="sub">This writes <code>js/products.js</code> into the Firestore <code>products</code> collection.
+        Each product keeps its <code>id</code> as the document ID, so re-running can never create duplicates.</p>
+      <button id="migrate-btn">Run Migration</button>
+      <button id="logout-btn">Log Out</button>
+      <div class="status" id="migrate-status"></div>
+      <p class="hint">Requires Firestore security rules that allow writes only to authenticated users.</p>
+    </div>
+  </div>
+
+  <script src="js/products.js"></script>
+  <script type="module">
+    import { db, auth } from './js/firebase-config.js';
+    import {
+      collection,
+      doc,
+      setDoc,
+      getDoc,
+    } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js';
+    import {
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut,
+    } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js';
+
+    const $ = (id) => document.getElementById(id);
+    const loginSection = $('login-section');
+    const migrateSection = $('migrate-section');
+    const loginStatus = $('login-status');
+    const migrateStatus = $('migrate-status');
+    const who = $('who');
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loginSection.style.display = 'none';
+        migrateSection.classList.add('visible');
+        who.textContent = 'Signed in as ' + user.email;
+      } else {
+        migrateSection.classList.remove('visible');
+        loginSection.style.display = 'block';
+      }
+    });
+
+    $('login-btn').addEventListener('click', async () => {
+      const email = $('email').value.trim();
+      const password = $('password').value;
+      loginStatus.textContent = 'Signing in…';
+      loginStatus.className = 'status';
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        loginStatus.textContent = '';
+      } catch (err) {
+        loginStatus.textContent = 'Login failed: ' + (err.message || err.code);
+        loginStatus.className = 'status err';
+      }
+    });
+
+    $('logout-btn').addEventListener('click', () => signOut(auth));
+
+    $('migrate-btn').addEventListener('click', async () => {
+      const btn = $('migrate-btn');
+      btn.disabled = true;
+      migrateStatus.textContent = 'Running migration…';
+      migrateStatus.className = 'status';
+      try {
+        const source = window.PRODUCTS || [];
+        if (!source.length) throw new Error('No products found in js/products.js');
+        let migrated = 0;
+        let alreadyExisted = 0;
+        for (const product of source) {
+          if (!product || !product.id) continue;
+          const ref = doc(collection(db, 'products'), product.id);
+          const snap = await getDoc(ref);
+          if (snap.exists()) {
+            alreadyExisted += 1;
+            continue;
+          }
+          await setDoc(ref, {
+            ...product,
+            discountAmount: Number(product.discountAmount) || 0,
+          });
+          migrated += 1;
+        }
+        migrateStatus.textContent =
+          'Done — migrated ' + migrated + ', already existed ' + alreadyExisted +
+          ' (total ' + source.length + '). Document IDs = product IDs, so no duplicates.';
+        migrateStatus.className = 'status ok';
+      } catch (err) {
+        migrateStatus.textContent = 'Migration failed: ' + (err.message || err);
+        migrateStatus.className = 'status err';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
