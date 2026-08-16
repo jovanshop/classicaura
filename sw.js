@@ -12,7 +12,7 @@
    so they work when the site is served from a sub-path.
 */
 
-const VERSION = 'classic-aura-v4';
+const VERSION = 'classic-aura-v5';
 const CACHE_NAME = VERSION;
 
 /* Core assets to cache on install. Keep this small and stable. */
@@ -29,6 +29,8 @@ const PRECACHE_URLS = [
   './css/style.css',
   './js/products.js',
   './js/main.js',
+  './js/firebase-config.js',
+  './js/store-data.js',
   './favicon.svg',
   './manifest.json',
   './images/bannar.jpg',

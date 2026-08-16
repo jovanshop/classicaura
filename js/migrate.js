@@ -33,7 +33,7 @@ import {
  * @returns {Promise<{migrated:number, alreadyExisted:number}>}
  */
 export async function runMigration(force = false) {
-  const source = window.PRODUCTS || [];
+  const source = (typeof PRODUCTS !== 'undefined' ? PRODUCTS : []) || [];
   const col = collection(db, 'products');
 
   let migrated = 0;

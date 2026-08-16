@@ -15,6 +15,38 @@ function safeInit(fn) {
   }
 }
 
+/* ─── Store data access ───
+   Products come from the Firestore-backed store layer (js/store-data.js),
+   which publishes window.STORE_PRODUCTS and fires the
+   `classicaura:store-ready` event when data arrives. Until then — or if
+   Firestore is unreachable — the static js/products.js catalog is used as a
+   fallback, so the storefront always renders something. */
+function getStoreProducts() {
+  if (window.STORE_PRODUCTS && window.STORE_PRODUCTS.length) {
+    return window.STORE_PRODUCTS;
+  }
+  return typeof PRODUCTS !== 'undefined' ? PRODUCTS : [];
+}
+
+function getStoreProductById(id) {
+  return getStoreProducts().find((p) => p.id === id) || null;
+}
+
+/* Flat admin-set discount in Taka (clamped >= 0). */
+function getProductDiscountAmount(product) {
+  return Math.max(0, Number(product && product.discountAmount) || 0);
+}
+
+/* Price after the flat admin discount, before the member 10%. */
+function getEffectiveProductPrice(product) {
+  return Math.max(0, (Number(product && product.price) || 0) - getProductDiscountAmount(product));
+}
+
+/* Same as above but for a stored cart item (which snapshots price + discount). */
+function getEffectiveItemPrice(item) {
+  return Math.max(0, (Number(item && item.price) || 0) - (Number(item && item.discountAmount) || 0));
+}
+
 /* ─── DOM Ready ─── */
 document.addEventListener('DOMContentLoaded', () => {
   safeInit(initHamburgerMenu);
@@ -32,7 +64,32 @@ document.addEventListener('DOMContentLoaded', () => {
   safeInit(initDarkModeToggle);
   safeInit(initSaleCountdown);
   safeInit(initWelcomePopup);
+
+  // When Firestore data lands, re-render every product-bearing view on the
+  // current page so admin changes appear without a reload. Each renderer
+  // no-ops when its container isn't present.
+  window.addEventListener('classicaura:store-ready', () => {
+    safeInit(refreshPriceDisplay);
+    safeInit(refreshProductPage);
+    safeInit(refreshCheckoutSummary);
+  });
 });
+
+/* Re-render the product page in place when store data arrives. */
+function refreshProductPage() {
+  const container = document.getElementById('product-container');
+  if (!container) return;
+  const productId = new URLSearchParams(window.location.search).get('id');
+  const product = getStoreProductById(productId);
+  if (!product) return;
+  renderProductPage(product, container);
+}
+
+function refreshCheckoutSummary() {
+  const itemsContainer = document.getElementById('checkout-summary-items');
+  if (!itemsContainer) return;
+  renderCheckoutSummary();
+}
 
 /* ─── Dark Mode Toggle ───
    Preference is persisted to localStorage so the choice survives across
@@ -258,6 +315,7 @@ function addToCart(product) {
       id: product.id,
       name: product.name,
       price: product.price,
+      discountAmount: getProductDiscountAmount(product),
       image: product.image || '',
       quantity: 1,
     });
@@ -330,9 +388,9 @@ function initScrollFade() {
 /* ─── Render Best Sellers (Homepage) ─── */
 function renderBestSellers() {
   const container = document.getElementById('best-sellers-grid');
-  if (!container || typeof PRODUCTS === 'undefined') return;
+  if (!container || getStoreProducts().length === 0) return;
 
-  const products = PRODUCTS.slice(0, 4);
+  const products = getStoreProducts().slice(0, 4);
 
   container.innerHTML = products
     .map((product, index) => {
@@ -386,7 +444,7 @@ function renderBestSellers() {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const id = btn.dataset.productId;
-      const product = PRODUCTS.find((p) => p.id === id);
+      const product = getStoreProductById(id);
       if (product) addToCart(product);
     });
   });
@@ -531,7 +589,7 @@ let shopSearchTimeout = null;
 
 function initShopPage() {
   const grid = document.getElementById('shop-grid');
-  if (!grid || typeof PRODUCTS === 'undefined') return;
+  if (!grid || getStoreProducts().length === 0) return;
 
   const searchInput = document.getElementById('search-input');
   const priceMin = document.getElementById('price-min');
@@ -647,38 +705,39 @@ function renderShopProducts() {
   const sortBy = document.getElementById('sort-select')?.value || 'featured';
 
   // Filter
-  let filtered = PRODUCTS.filter((p) => {
+  let filtered = getStoreProducts().filter((p) => {
     if (selectedCategories.length > 0 && !selectedCategories.includes(p.category)) return false;
     if (
       searchTerm &&
       !p.name.toLowerCase().includes(searchTerm) &&
       !p.shortDescription.toLowerCase().includes(searchTerm)
     ) return false;
-    if (p.price < priceMin || p.price > priceMax) return false;
+    const effPrice = getEffectiveProductPrice(p);
+    if (effPrice < priceMin || effPrice > priceMax) return false;
     return true;
   });
 
   // Sort
   switch (sortBy) {
     case 'price-asc':
-      filtered.sort((a, b) => a.price - b.price);
+      filtered.sort((a, b) => getEffectiveProductPrice(a) - getEffectiveProductPrice(b));
       break;
     case 'price-desc':
-      filtered.sort((a, b) => b.price - a.price);
+      filtered.sort((a, b) => getEffectiveProductPrice(b) - getEffectiveProductPrice(a));
       break;
     case 'name':
       filtered.sort((a, b) => a.name.localeCompare(b.name));
       break;
     case 'newest':
-      // Reverse PRODUCTS order so last-added products appear first
-      filtered.sort((a, b) => PRODUCTS.indexOf(a) < PRODUCTS.indexOf(b) ? 1 : -1);
+      // Reverse product order so last-added products appear first
+      filtered.sort((a, b) => getStoreProducts().indexOf(a) < getStoreProducts().indexOf(b) ? 1 : -1);
       break;
-    // 'featured' — keep original PRODUCTS order
+    // 'featured' — keep original product order
   }
 
   // Update results count
   if (resultsCount) {
-    const total = PRODUCTS.length;
+    const total = getStoreProducts().length;
     resultsCount.textContent =
       filtered.length === total
         ? `Showing all ${total} products`
@@ -703,7 +762,7 @@ function renderShopProducts() {
   grid.querySelectorAll('.add-to-cart-btn').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const product = PRODUCTS.find((p) => p.id === btn.dataset.id);
+      const product = getStoreProductById(btn.dataset.id);
       if (product) addToCart(product);
     });
   });
@@ -841,7 +900,7 @@ function getProductIconSVG(key) {
 
 function initProductPage() {
   const container = document.getElementById('product-container');
-  if (!container || typeof PRODUCTS === 'undefined') return;
+  if (!container || getStoreProducts().length === 0) return;
 
   const urlParams = new URLSearchParams(window.location.search);
   const productId = urlParams.get('id');
@@ -854,7 +913,7 @@ function initProductPage() {
     return;
   }
 
-  const product = PRODUCTS.find((p) => p.id === productId);
+  const product = getStoreProductById(productId);
   if (!product) {
     showProductNotFound(container);
     return;
@@ -1021,16 +1080,28 @@ function renderProductPage(product, container) {
   const reviews = generateReviews(product);
   const inWishlist = isInWishlist(product.id);
   const priceFormatted = Number(product.price).toLocaleString('en-BN');
-  // Signed-in visitors see the 10% member price with the regular price struck
-  // through; otherwise the standard price (with any originalPrice badge) shows.
+  const discountAmount = getProductDiscountAmount(product);
+  const effectivePrice = getEffectiveProductPrice(product);
+  const effectivePriceFormatted = effectivePrice.toLocaleString('en-BN');
+  const discountPct =
+    discountAmount > 0 && Number(product.price) > 0
+      ? Math.round((discountAmount / Number(product.price)) * 100)
+      : 0;
+  // Signed-in visitors see the 10% member price stacked on top of the flat
+  // admin discount (the discounted price is struck through). Otherwise the
+  // effective price shows, preferring the flat discountAmount badge, then the
+  // legacy originalPrice badge, then the plain price.
   const priceMarkup = isSignedIn()
-    ? '৳ ' + getDiscountedPrice(product.price).toLocaleString('en-BN') +
-      ' <span class="original">৳' + priceFormatted + '</span>' +
+    ? '৳ ' + getDiscountedPrice(effectivePrice).toLocaleString('en-BN') +
+      ' <span class="original">৳' + effectivePriceFormatted + '</span>' +
       ' <span class="discount">10% OFF</span>'
-    : '৳ ' + priceFormatted + (product.originalPrice
-        ? ' <span class="original">৳' + Number(product.originalPrice).toLocaleString('en-BN') +
-          '</span> <span class="discount">' + Math.round((1 - product.price / product.originalPrice) * 100) + '% OFF</span>'
-        : '');
+    : '৳ ' + effectivePriceFormatted + (discountPct > 0
+        ? ' <span class="original">৳' + priceFormatted +
+          '</span> <span class="discount">' + discountPct + '% OFF</span>'
+        : (product.originalPrice
+            ? ' <span class="original">৳' + Number(product.originalPrice).toLocaleString('en-BN') +
+              '</span> <span class="discount">' + Math.round((1 - product.price / product.originalPrice) * 100) + '% OFF</span>'
+            : ''));
 
   const variantType = product.variantType || (product.category === 'fashion' ? 'size' : 'shade');
   const variantLabel = variantType === 'size' ? 'Size' : variantType === 'color' ? 'Color' : 'Shade';
@@ -1051,7 +1122,8 @@ function renderProductPage(product, container) {
     });
   }
 
-  // JSON-LD Product schema
+  // JSON-LD Product schema (single instance — remove any prior render's tag so
+  // the store-ready re-render doesn't accumulate duplicates)
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -1072,8 +1144,10 @@ function renderProductPage(product, container) {
     schema.offers.highPrice = product.originalPrice;
     schema.offers.priceType = 'https://schema.org/ListPrice';
   }
+  document.querySelectorAll('script[data-classic-aura-product-schema]').forEach((node) => node.remove());
   const schemaTag = document.createElement('script');
   schemaTag.type = 'application/ld+json';
+  schemaTag.setAttribute('data-classic-aura-product-schema', 'true');
   schemaTag.textContent = JSON.stringify(schema);
   document.head.appendChild(schemaTag);
 
@@ -1399,6 +1473,7 @@ function renderProductPage(product, container) {
       id: product.id,
       name: product.name,
       price: product.price,
+      discountAmount: getProductDiscountAmount(product),
       image: product.image,
       variant: selectedVariant,
       variantType: product.variantType || '',
@@ -1422,6 +1497,7 @@ function renderProductPage(product, container) {
       id: product.id,
       name: product.name,
       price: product.price,
+      discountAmount: getProductDiscountAmount(product),
       image: product.image,
       variant: selectedVariant,
       variantType: product.variantType || '',
@@ -1441,7 +1517,8 @@ function renderProductPage(product, container) {
       const variant = selectedVariant ? ' (' + selectedVariant + ')' : '';
       const qtyValue = parseInt(qtyInput.value, 10) || 1;
       const memberDiscounted = isSignedIn();
-      const unitPrice = memberDiscounted ? getDiscountedPrice(product.price) : product.price;
+      const effectivePrice = getEffectiveProductPrice(product);
+      const unitPrice = memberDiscounted ? getDiscountedPrice(effectivePrice) : effectivePrice;
       const total = unitPrice * qtyValue;
       const msg =
         'Hi! I\'d like to place an order:\n' +
@@ -1449,7 +1526,7 @@ function renderProductPage(product, container) {
         'Product: ' + name + variant + '\n' +
         'Quantity: ' + qtyValue + '\n' +
         'Price: ৳' + unitPrice + ' each (Total: ৳' + total + ')' +
-        (memberDiscounted ? ' — 10% member discount applied (was ৳' + product.price + ')' : '') + '\n' +
+        (memberDiscounted ? ' — 10% member discount applied (was ৳' + effectivePrice + ')' : '') + '\n' +
         '───────────────\n' +
         'Please confirm availability and delivery details.';
       window.open('https://wa.me/' + product.whatsapp.phone + '?text=' + encodeURIComponent(msg), '_blank', 'noopener');
@@ -1511,13 +1588,13 @@ function renderRelatedProducts(currentProduct) {
   const grid = document.getElementById('related-products-grid');
   if (!grid) return;
 
-  const related = PRODUCTS.filter(
+  const related = getStoreProducts().filter(
     (p) => p.category === currentProduct.category && p.id !== currentProduct.id
   ).slice(0, 4);
 
   if (related.length === 0) {
     // Fall back to products from other category
-    const fallback = PRODUCTS.filter((p) => p.id !== currentProduct.id).slice(0, 4);
+    const fallback = getStoreProducts().filter((p) => p.id !== currentProduct.id).slice(0, 4);
     renderProductCards(grid, fallback);
     return;
   }
@@ -1563,7 +1640,7 @@ function renderProductCards(grid, products) {
   grid.querySelectorAll('.add-to-cart-btn').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const product = PRODUCTS.find((p) => p.id === btn.dataset.id);
+      const product = getStoreProductById(btn.dataset.id);
       if (product) addToCart(product);
     });
   });
@@ -1730,17 +1807,19 @@ function setDiscountActive(active) {
 
 /* Single source of truth for cart pricing. Rounds each line individually so
    the numbers a customer sees on line items always match the subtotal, the
-   checkout summary, and the WhatsApp/order message. */
+   checkout summary, and the WhatsApp/order message. The flat admin discount
+   (discountAmount) is applied first, then the member 10% on top. */
 function getCartPricing() {
   var cart = getCart();
   var rawSubtotal = 0;
   var effectiveSubtotal = 0;
   var active = getDiscountActive();
   cart.forEach(function(item) {
-    var price = Number(item.price) || 0;
+    var basePrice = Number(item.price) || 0;
+    var effectivePrice = getEffectiveItemPrice(item);
     var qty = Number(item.quantity) || 1;
-    rawSubtotal += price * qty;
-    effectiveSubtotal += (active ? getDiscountedPrice(price) : price) * qty;
+    rawSubtotal += basePrice * qty;
+    effectiveSubtotal += (active ? getDiscountedPrice(effectivePrice) : effectivePrice) * qty;
   });
   return {
     active: active,
@@ -1907,15 +1986,26 @@ function refreshPriceDisplay() {
   renderCrossSells();
 }
 
-/* Price markup for product cards: shows the 10% member price with the regular
-   price struck through when signed in; otherwise the plain price. */
+/* Price markup for product cards. The flat admin discount (discountAmount)
+   is applied first — showing the discounted price with the original struck
+   through and an auto-computed % OFF badge. The member 10% then stacks on top
+   of the already-discounted price for signed-in visitors. */
 function buildProductPriceHTML(product) {
   var price = Number(product.price);
-  var priceStr = price.toLocaleString('en-BN');
-  if (!isSignedIn()) return '৳ ' + priceStr;
-  var discounted = getDiscountedPrice(price);
+  var discount = getProductDiscountAmount(product);
+  var effective = Math.max(0, price - discount);
+  var discountPct = discount > 0 && price > 0 ? Math.round((discount / price) * 100) : 0;
+  if (!isSignedIn()) {
+    if (discountPct > 0) {
+      return '৳ ' + effective.toLocaleString('en-BN') +
+        ' <span class="original">৳' + price.toLocaleString('en-BN') + '</span>' +
+        ' <span class="discount">' + discountPct + '% OFF</span>';
+    }
+    return '৳ ' + effective.toLocaleString('en-BN');
+  }
+  var discounted = getDiscountedPrice(effective);
   return '৳ ' + discounted.toLocaleString('en-BN') +
-    ' <span class="original">৳' + priceStr + '</span>' +
+    ' <span class="original">৳' + effective.toLocaleString('en-BN') + '</span>' +
     ' <span class="discount">10% OFF</span>';
 }
 
@@ -1956,8 +2046,8 @@ function renderCrossSells() {
     if (recs) {
       for (var r = 0; r < recs.length; r++) {
         var rid = recs[r];
-        if (!seen[rid] && cartIds.indexOf(rid) === -1 && typeof PRODUCTS !== 'undefined') {
-          var prod = PRODUCTS.find(function(p) { return p.id === rid; });
+        if (!seen[rid] && cartIds.indexOf(rid) === -1 && getStoreProducts().length > 0) {
+          var prod = getStoreProductById(rid);
           if (prod) {
             seen[rid] = true;
             suggested.push(prod);
@@ -1989,8 +2079,8 @@ function renderCrossSells() {
   container.querySelectorAll('.cs-add-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var pid = btn.dataset.csId;
-      if (typeof PRODUCTS === 'undefined') return;
-      var prod = PRODUCTS.find(function(p) { return p.id === pid; });
+      if (getStoreProducts().length === 0) return;
+      var prod = getStoreProductById(pid);
       if (!prod) return;
       addToCart(prod);
       renderCart();
@@ -2140,9 +2230,10 @@ function updateFreeShippingProgressBar(cartTotal) {
 
 function buildCartItemHTML(item, index) {
   const price = Number(item.price);
+  const effectivePrice = getEffectiveItemPrice(item);
   const qty = Number(item.quantity) || 1;
   const memberDiscounted = isSignedIn();
-  const unitPrice = memberDiscounted ? getDiscountedPrice(price) : price;
+  const unitPrice = memberDiscounted ? getDiscountedPrice(effectivePrice) : effectivePrice;
   const lineTotal = unitPrice * qty;
   const variantDisplay = item.variant
     ? item.variantType === 'color'
@@ -2158,7 +2249,7 @@ function buildCartItemHTML(item, index) {
       <div class="cart-item-details">
         <h4>${escapeHtml(item.name)}</h4>
         ${variantDisplay ? `<p class="cart-item-variant">${escapeHtml(variantDisplay)}</p>` : ''}
-        <p class="cart-item-unit-price">৳ ${unitPrice.toLocaleString('en-BN')}${memberDiscounted ? `<span class="original">৳${price.toLocaleString('en-BN')}</span>` : ''}</p>
+        <p class="cart-item-unit-price">৳ ${unitPrice.toLocaleString('en-BN')}${memberDiscounted ? `<span class="original">৳${effectivePrice.toLocaleString('en-BN')}</span>` : effectivePrice < price ? `<span class="original">৳${price.toLocaleString('en-BN')}</span>` : ''}</p>
       </div>
       <div class="cart-item-qty" data-index="${index}">
         <button class="qty-minus" aria-label="Decrease quantity" ${qty <= 1 ? 'disabled' : ''}>&minus;</button>
@@ -2366,8 +2457,8 @@ function renderCheckoutSummary() {
   itemsContainer.innerHTML = cart
     .map((item) => {
       const qty = Number(item.quantity) || 1;
-      const price = Number(item.price);
-      const unitPrice = isSignedIn() ? getDiscountedPrice(price) : price;
+      const effectivePrice = getEffectiveItemPrice(item);
+      const unitPrice = isSignedIn() ? getDiscountedPrice(effectivePrice) : effectivePrice;
       const variantDisplay = item.variant || '';
       return `
       <div class="order-summary-item">
@@ -2384,7 +2475,7 @@ function renderCheckoutSummary() {
     .join('');
 
   if (subtotalEl) subtotalEl.textContent = `৳ ${pricing.rawSubtotal.toLocaleString('en-BN')}`;
-  if (discountRow) discountRow.style.display = pricing.active && pricing.discountAmount > 0 ? 'flex' : 'none';
+  if (discountRow) discountRow.style.display = pricing.discountAmount > 0 ? 'flex' : 'none';
   if (discountEl && pricing.discountAmount > 0) discountEl.textContent = '−৳ ' + pricing.discountAmount.toLocaleString('en-BN');
   if (deliveryEl) deliveryEl.textContent = delivery > 0 ? `৳ ${delivery}` : '৳ 0';
   if (totalEl) totalEl.textContent = `৳ ${total.toLocaleString('en-BN')}`;
@@ -2462,8 +2553,8 @@ function submitOrder() {
     confirmedItems.innerHTML = cart
       .map((item) => {
         const qty = Number(item.quantity) || 1;
-        const price = Number(item.price);
-        const unitPrice = isSignedIn() ? getDiscountedPrice(price) : price;
+        const effectivePrice = getEffectiveItemPrice(item);
+        const unitPrice = isSignedIn() ? getDiscountedPrice(effectivePrice) : effectivePrice;
         const variantDisplay = item.variant || '';
         return `
         <div class="order-summary-item">
@@ -2483,7 +2574,7 @@ function submitOrder() {
   if (confirmedSubtotal) confirmedSubtotal.textContent = `৳ ${pricing.rawSubtotal.toLocaleString('en-BN')}`;
   var confirmedDiscountRow = document.getElementById('confirmed-discount-row');
   var confirmedDiscountEl = document.getElementById('confirmed-discount');
-  if (confirmedDiscountRow) confirmedDiscountRow.style.display = pricing.active && pricing.discountAmount > 0 ? 'flex' : 'none';
+  if (confirmedDiscountRow) confirmedDiscountRow.style.display = pricing.discountAmount > 0 ? 'flex' : 'none';
   if (confirmedDiscountEl && pricing.discountAmount > 0) confirmedDiscountEl.textContent = '−৳ ' + pricing.discountAmount.toLocaleString('en-BN');
   if (confirmedDelivery) confirmedDelivery.textContent = delivery > 0 ? '৳ ' + delivery : '৳ 0';
   var confirmedDL = document.getElementById('confirmed-delivery');
@@ -2508,8 +2599,8 @@ function submitOrder() {
   const itemsStr = cart
     .map((item) => {
       const qty = Number(item.quantity) || 1;
-      const price = Number(item.price);
-      const unitPrice = isSignedIn() ? getDiscountedPrice(price) : price;
+      const effectivePrice = getEffectiveItemPrice(item);
+      const unitPrice = isSignedIn() ? getDiscountedPrice(effectivePrice) : effectivePrice;
       const variant = item.variant || '';
       return `${item.name}${variant ? ` (${variant})` : ''} × ${qty} — ৳${unitPrice * qty}`;
     })

@@ -129,7 +129,7 @@
       migrateStatus.textContent = 'Running migration…';
       migrateStatus.className = 'status';
       try {
-        const source = window.PRODUCTS || [];
+        const source = (typeof PRODUCTS !== 'undefined' ? PRODUCTS : []) || [];
         if (!source.length) throw new Error('No products found in js/products.js');
         let migrated = 0;
         let alreadyExisted = 0;
