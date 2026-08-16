@@ -364,25 +364,42 @@ function isInWishlist(productId) {
   return getWishlist().includes(productId);
 }
 
-/* ─── Scroll Fade-in ─── */
-function initScrollFade() {
-  const sections = document.querySelectorAll('.fade-in-section');
+/* ─── Scroll Fade-in ───
+   Shared IntersectionObserver so the reveal can be re-applied after
+   dynamic re-renders (e.g. when Firestore data lands and the product
+   grids are rebuilt). Elements already revealed are skipped, and when the
+   user prefers reduced motion every fade-in section is revealed instantly
+   instead of being left invisible. */
+let fadeObserver = null;
+
+function observeFadeSections() {
+  const sections = document.querySelectorAll('.fade-in-section:not(.visible)');
   if (!sections.length) return;
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target);
-        }
-      });
-    },
-    { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
-  );
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    sections.forEach((section) => section.classList.add('visible'));
+    return;
+  }
 
-  sections.forEach((section) => observer.observe(section));
+  if (!fadeObserver) {
+    fadeObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            fadeObserver.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+    );
+  }
+
+  sections.forEach((section) => fadeObserver.observe(section));
+}
+
+function initScrollFade() {
+  observeFadeSections();
 }
 
 /* ─── Render Best Sellers (Homepage) ─── */
@@ -1984,6 +2001,7 @@ function refreshPriceDisplay() {
   renderShopProducts();
   renderCart();
   renderCrossSells();
+  observeFadeSections();
 }
 
 /* Price markup for product cards. The flat admin discount (discountAmount)
