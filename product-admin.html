@@ -95,6 +95,14 @@
     }
     .toolbar h3 { font-size: 1rem; color: #fff; }
     .toolbar .hint { font-size: 0.75rem; color: #666; margin-top: 2px; }
+    .toolbar-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .btn-restore {
+      padding: 10px 18px; background: transparent; color: #e0e0e0;
+      border: 1.5px solid #34344a; border-radius: 10px; font-weight: 600;
+      font-size: 0.8125rem; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-restore:hover { border-color: #c9a961; color: #c9a961; }
+    .btn-restore:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-add {
       padding: 10px 22px; background: #c9a961; color: #0f0f13; border: none;
       border-radius: 10px; font-weight: 600; font-size: 0.875rem; cursor: pointer;
@@ -268,7 +276,10 @@
         <h3>Product Catalog</h3>
         <p class="hint">Edits save directly to Firestore and appear on the live storefront.</p>
       </div>
-      <button class="btn-add" id="add-btn">+ Add Product</button>
+      <div class="toolbar-actions">
+        <button class="btn-restore" id="restore-btn">Restore Original Catalog</button>
+        <button class="btn-add" id="add-btn">+ Add Product</button>
+      </div>
     </div>
 
     <div id="list-area">
@@ -639,6 +650,67 @@
       window.alert('Delete failed: ' + (err.message || err));
     }
   }
+
+  /* ─── Restore original catalog ───
+     Re-creates the three original products from js/products.js with their
+     full data and correct doc IDs (setDoc overwrite, discountAmount 0),
+     then removes any non-original doc that is a duplicate of the bleach
+     product (name contains "mango nourishing"). Products the admin added
+     that are not one of the originals are left untouched. */
+  $('restore-btn').addEventListener('click', async () => {
+    const originalCatalog = typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS) ? PRODUCTS : [];
+    if (!originalCatalog.length) {
+      window.alert('Original catalog not found (js/products.js failed to load).');
+      return;
+    }
+    const ok = window.confirm(
+      'Restore the original 3-product catalog?\n\n' +
+      'This overwrites the original products with their full catalog data and correct IDs ' +
+      '(and resets any admin-set discount to 0), and removes the duplicate bleach product ' +
+      '("herbs-mango-nourishing-bleach"). Products you added that are not one of the three ' +
+      'originals are kept as-is.\n\nProceed?'
+    );
+    if (!ok) return;
+
+    const btn = $('restore-btn');
+    btn.disabled = true;
+    btn.textContent = 'Restoring…';
+    try {
+      for (const p of originalCatalog) {
+        const data = { ...p };
+        delete data.id;
+        await setDoc(doc(db, 'products', p.id), {
+          ...data,
+          discountAmount: 0,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      }
+
+      const snap = await getDocs(collection(db, 'products'));
+      const removed = [];
+      for (const docSnap of snap.docs) {
+        const did = docSnap.id;
+        if (originalCatalog.some((p) => p.id === did)) continue;
+        const name = String((docSnap.data() && docSnap.data().name) || '').toLowerCase();
+        if (name.indexOf('mango nourishing') !== -1) {
+          await deleteDoc(doc(db, 'products', did));
+          removed.push(did);
+        }
+      }
+
+      await loadProducts();
+      window.alert(
+        'Original catalog restored.\n\n' +
+        'Duplicate doc(s) removed: ' + (removed.length ? removed.join(', ') : 'none')
+      );
+    } catch (err) {
+      window.alert('Restore failed: ' + (err.message || err));
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Restore Original Catalog';
+    }
+  });
 
   /* ─── Helpers ─── */
   function slugify(str) {
