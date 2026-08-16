@@ -527,24 +527,22 @@
 
   /* ─── Cloudinary Upload Widget (unsigned preset) ─── */
   function loadUploadWidget() {
-    if (uploadWidget || typeof cloudinary === 'undefined') {
-      if (typeof cloudinary !== 'undefined' && cloudinary.createUploadWidget) {
-        uploadWidget = cloudinary.createUploadWidget(
-          { cloudName: CLOUD_NAME, uploadPreset: UPLOAD_PRESET, multiple: true, folder: 'classicaura' },
-          (error, result) => {
-            if (error) {
-              saveStatus.textContent = 'Upload error: ' + (error.message || error);
-              saveStatus.className = 'status err';
-              return;
-            }
-            if (result && result.event === 'success') {
-              const url = result.info && result.info.secure_url;
-              if (url && productImages.indexOf(url) === -1) productImages.push(url);
-              renderThumbs();
-            }
+    if (!uploadWidget && typeof cloudinary !== 'undefined' && cloudinary.createUploadWidget) {
+      uploadWidget = cloudinary.createUploadWidget(
+        { cloudName: CLOUD_NAME, uploadPreset: UPLOAD_PRESET, multiple: true, folder: 'classicaura' },
+        (error, result) => {
+          if (error) {
+            saveStatus.textContent = 'Upload error: ' + (error.message || error);
+            saveStatus.className = 'status err';
+            return;
           }
-        );
-      }
+          if (result && result.event === 'success') {
+            const url = result.info && result.info.secure_url;
+            if (url && productImages.indexOf(url) === -1) productImages.push(url);
+            renderThumbs();
+          }
+        }
+      );
     }
     if (uploadWidget) uploadWidget.open();
   }
