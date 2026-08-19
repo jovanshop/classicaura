@@ -413,7 +413,7 @@ function renderBestSellers() {
     .map((product, index) => {
       const inWishlist = isInWishlist(product.id);
       return `
-      <div class="product-card fade-in-section" data-product-id="${product.id}">
+      <div class="product-card" data-product-id="${product.id}">
         <a
           href="product.html?id=${encodeURIComponent(product.id)}"
           class="product-card-image-link"
