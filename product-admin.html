@@ -169,11 +169,11 @@
     .modal-overlay.visible { display: flex; }
     .modal-card {
       background: #1a1a24; border: 1px solid #2a2a3a; border-radius: 18px;
-      width: 100%; max-width: 560px; padding: 28px; box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+      width: 100%; max-width: 580px; padding: 30px; box-shadow: 0 24px 80px rgba(0,0,0,0.6);
     }
     .modal-header {
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 20px;
+      margin-bottom: 22px;
     }
     .modal-header h3 { color: #fff; font-size: 1.05rem; }
     .modal-close {
@@ -181,6 +181,15 @@
       cursor: pointer; line-height: 1; padding: 4px;
     }
     .modal-close:hover { color: #fff; }
+
+    .form-body { display: flex; flex-direction: column; gap: 18px; }
+    .form-section { display: flex; flex-direction: column; gap: 14px; }
+    .section-label {
+      font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #c9a961;
+    }
+    .section-divider { height: 1px; background: #24242f; }
+
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .form-field { display: flex; flex-direction: column; gap: 6px; }
     .form-field.full { grid-column: 1 / -1; }
@@ -188,6 +197,7 @@
     .form-field input, .form-field select, .form-field textarea {
       padding: 10px 12px; background: #0f0f13; border: 1.5px solid #2a2a3a;
       border-radius: 9px; color: #fff; outline: none; font-size: 0.875rem;
+      transition: border-color 0.2s;
     }
     .form-field input:focus, .form-field select:focus, .form-field textarea:focus {
       border-color: #c9a961;
@@ -195,17 +205,12 @@
     .form-field textarea { resize: vertical; min-height: 84px; }
     .form-field select { appearance: auto; }
 
-    /* Size-wise stock */
-    .size-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 4px; }
-    .size-field { display: flex; flex-direction: column; gap: 4px; }
-    .size-field label {
-      font-size: 0.6875rem; color: #888; text-align: center; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.03em;
-    }
+    /* Size fields */
+    .size-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
     .size-field input {
-      padding: 9px 4px; text-align: center; background: #0f0f13;
+      width: 100%; padding: 9px 4px; text-align: center; background: #0f0f13;
       border: 1.5px solid #2a2a3a; border-radius: 8px; color: #fff;
-      outline: none; font-size: 0.8125rem;
+      outline: none; font-size: 0.8125rem; transition: border-color 0.2s;
     }
     .size-field input:focus { border-color: #c9a961; }
     @media (max-width: 640px) {
@@ -313,59 +318,88 @@
       <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
     </div>
 
-    <div class="form-grid">
-      <div class="form-field full">
-        <label for="f-name">Product Name</label>
-        <input type="text" id="f-name" placeholder="e.g. Maroon Embroidered Kurti Set">
-      </div>
-      <div class="form-field">
-        <label for="f-category">Category</label>
-        <select id="f-category">
-          <option value="fashion">Fashion</option>
-          <option value="cosmetics">Cosmetics</option>
-        </select>
-      </div>
-      <div class="form-field">
-        <label for="f-price">Price (৳)</label>
-        <input type="number" id="f-price" min="0" step="1" placeholder="e.g. 1550">
-      </div>
-      <div class="form-field">
-        <label for="f-discount">Discount (৳)</label>
-        <input type="number" id="f-discount" min="0" step="1" placeholder="e.g. 0" value="0">
-      </div>
-      <div class="form-field full">
-        <label>Size-wise Stock</label>
-        <div class="size-grid">
-          <div class="size-field">
-            <label for="f-stock-s">S</label>
-            <input type="number" id="f-stock-s" min="0" placeholder="0">
+    <div class="form-body">
+      <div class="form-section">
+        <div class="section-label">Overview</div>
+        <div class="form-grid">
+          <div class="form-field full">
+            <label for="f-name">Product Name</label>
+            <input type="text" id="f-name" placeholder="e.g. Maroon Embroidered Kurti Set">
           </div>
-          <div class="size-field">
-            <label for="f-stock-m">M</label>
-            <input type="number" id="f-stock-m" min="0" placeholder="0">
-          </div>
-          <div class="size-field">
-            <label for="f-stock-l">L</label>
-            <input type="number" id="f-stock-l" min="0" placeholder="0">
-          </div>
-          <div class="size-field">
-            <label for="f-stock-xl">XL</label>
-            <input type="number" id="f-stock-xl" min="0" placeholder="0">
-          </div>
-          <div class="size-field">
-            <label for="f-stock-xxl">XXL</label>
-            <input type="number" id="f-stock-xxl" min="0" placeholder="0">
+          <div class="form-field">
+            <label for="f-category">Category</label>
+            <select id="f-category">
+              <option value="fashion">Fashion</option>
+              <option value="cosmetics">Cosmetics</option>
+            </select>
           </div>
         </div>
       </div>
-      <div class="form-field full">
-        <label for="f-desc">Short Description</label>
-        <textarea id="f-desc" placeholder="A short, punchy product description shown on cards and the product page."></textarea>
+
+      <div class="section-divider"></div>
+
+      <div class="form-section">
+        <div class="section-label">Pricing</div>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="f-price">Price (৳)</label>
+            <input type="number" id="f-price" min="0" step="1" placeholder="e.g. 1550">
+          </div>
+          <div class="form-field">
+            <label for="f-discount">Discount (৳)</label>
+            <input type="number" id="f-discount" min="0" step="1" placeholder="e.g. 0" value="0">
+          </div>
+        </div>
       </div>
-      <div class="form-field full">
-        <label>Product Images</label>
-        <button type="button" class="upload-btn" id="upload-btn">Upload Images (Cloudinary)</button>
-        <div class="thumb-grid" id="thumb-grid"></div>
+
+      <div class="section-divider"></div>
+
+      <div class="form-section">
+        <div class="section-label">Size</div>
+        <div class="size-grid">
+          <div class="size-field">
+            <input type="text" id="f-size-1">
+          </div>
+          <div class="size-field">
+            <input type="text" id="f-size-2">
+          </div>
+          <div class="size-field">
+            <input type="text" id="f-size-3">
+          </div>
+          <div class="size-field">
+            <input type="text" id="f-size-4">
+          </div>
+          <div class="size-field">
+            <input type="text" id="f-size-5">
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <div class="form-section">
+        <div class="section-label">Description</div>
+        <div class="form-grid">
+          <div class="form-field full">
+            <label for="f-desc">Short Description</label>
+            <textarea id="f-desc" placeholder="A short, punchy product description shown on cards and the product page."></textarea>
+          </div>
+          <div class="form-field full">
+            <label for="f-full-desc">Full Description</label>
+            <textarea id="f-full-desc" placeholder="Detailed product description shown on the product page."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <div class="form-section">
+        <div class="section-label">Media</div>
+        <div class="form-field full">
+          <label>Product Images</label>
+          <button type="button" class="upload-btn" id="upload-btn">Upload Images (Cloudinary)</button>
+          <div class="thumb-grid" id="thumb-grid"></div>
+        </div>
       </div>
     </div>
 
@@ -525,12 +559,13 @@
     $('f-category').value = 'fashion';
     $('f-price').value = '';
     $('f-discount').value = '0';
-    $('f-stock-s').value = '';
-    $('f-stock-m').value = '';
-    $('f-stock-l').value = '';
-    $('f-stock-xl').value = '';
-    $('f-stock-xxl').value = '';
+    $('f-size-1').value = '';
+    $('f-size-2').value = '';
+    $('f-size-3').value = '';
+    $('f-size-4').value = '';
+    $('f-size-5').value = '';
     $('f-desc').value = '';
+    $('f-full-desc').value = '';
     productImages = [];
     renderThumbs();
     openModal('Add Product');
@@ -544,13 +579,14 @@
     $('f-category').value = p.category === 'cosmetics' ? 'cosmetics' : 'fashion';
     $('f-price').value = p.price != null ? p.price : '';
     $('f-discount').value = p.discountAmount != null ? Math.max(0, Number(p.discountAmount)) : 0;
-    const sizeStock = p.sizeStock || {};
-    $('f-stock-s').value = sizeStock.S != null ? sizeStock.S : '';
-    $('f-stock-m').value = sizeStock.M != null ? sizeStock.M : '';
-    $('f-stock-l').value = sizeStock.L != null ? sizeStock.L : '';
-    $('f-stock-xl').value = sizeStock.XL != null ? sizeStock.XL : '';
-    $('f-stock-xxl').value = sizeStock.XXL != null ? sizeStock.XXL : '';
+    const sizes = Array.isArray(p.sizes) ? p.sizes : [];
+    $('f-size-1').value = sizes[0] || '';
+    $('f-size-2').value = sizes[1] || '';
+    $('f-size-3').value = sizes[2] || '';
+    $('f-size-4').value = sizes[3] || '';
+    $('f-size-5').value = sizes[4] || '';
     $('f-desc').value = p.shortDescription || '';
+    $('f-full-desc').value = p.fullDescription || '';
     productImages = Array.isArray(p.images) && p.images.length
       ? p.images.slice()
       : (p.image ? [p.image] : []);
@@ -621,15 +657,15 @@
     const category = $('f-category').value;
     const price = Math.max(0, Number($('f-price').value) || 0);
     const discountAmount = Math.max(0, Number($('f-discount').value) || 0);
-    const sizeStock = {
-      S: Math.max(0, Number($('f-stock-s').value) || 0),
-      M: Math.max(0, Number($('f-stock-m').value) || 0),
-      L: Math.max(0, Number($('f-stock-l').value) || 0),
-      XL: Math.max(0, Number($('f-stock-xl').value) || 0),
-      XXL: Math.max(0, Number($('f-stock-xxl').value) || 0),
-    };
-    const stock = Object.values(sizeStock).reduce((a, b) => a + b, 0);
+    const sizes = [
+      $('f-size-1').value.trim(),
+      $('f-size-2').value.trim(),
+      $('f-size-3').value.trim(),
+      $('f-size-4').value.trim(),
+      $('f-size-5').value.trim(),
+    ].filter((s) => s !== '');
     const shortDescription = $('f-desc').value.trim();
+    const fullDescription = $('f-full-desc').value.trim();
 
     if (!name) {
       saveStatus.textContent = 'Product name is required.';
@@ -654,10 +690,10 @@
       price,
       discountAmount,
       shortDescription,
+      fullDescription,
       images,
       image: images[0] || '',
-      sizeStock,
-      stock,
+      sizes,
       updatedAt: serverTimestamp(),
     };
 
