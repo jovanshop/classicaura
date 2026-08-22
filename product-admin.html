@@ -579,12 +579,12 @@
     $('f-category').value = p.category === 'cosmetics' ? 'cosmetics' : 'fashion';
     $('f-price').value = p.price != null ? p.price : '';
     $('f-discount').value = p.discountAmount != null ? Math.max(0, Number(p.discountAmount)) : 0;
-    const sizes = Array.isArray(p.sizes) ? p.sizes : [];
-    $('f-size-1').value = sizes[0] || '';
-    $('f-size-2').value = sizes[1] || '';
-    $('f-size-3').value = sizes[2] || '';
-    $('f-size-4').value = sizes[3] || '';
-    $('f-size-5').value = sizes[4] || '';
+    const variants = Array.isArray(p.variants) ? p.variants : [];
+    $('f-size-1').value = variants[0]?.label || '';
+    $('f-size-2').value = variants[1]?.label || '';
+    $('f-size-3').value = variants[2]?.label || '';
+    $('f-size-4').value = variants[3]?.label || '';
+    $('f-size-5').value = variants[4]?.label || '';
     $('f-desc').value = p.shortDescription || '';
     $('f-full-desc').value = p.fullDescription || '';
     productImages = Array.isArray(p.images) && p.images.length
@@ -664,6 +664,7 @@
       $('f-size-4').value.trim(),
       $('f-size-5').value.trim(),
     ].filter((s) => s !== '');
+    const variants = sizes.map((s) => ({ value: s, label: s }));
     const shortDescription = $('f-desc').value.trim();
     const fullDescription = $('f-full-desc').value.trim();
 
@@ -693,7 +694,7 @@
       fullDescription,
       images,
       image: images[0] || '',
-      sizes,
+      variants,
       updatedAt: serverTimestamp(),
     };
 
