@@ -195,6 +195,23 @@
     .form-field textarea { resize: vertical; min-height: 84px; }
     .form-field select { appearance: auto; }
 
+    /* Size-wise stock */
+    .size-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 4px; }
+    .size-field { display: flex; flex-direction: column; gap: 4px; }
+    .size-field label {
+      font-size: 0.6875rem; color: #888; text-align: center; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .size-field input {
+      padding: 9px 4px; text-align: center; background: #0f0f13;
+      border: 1.5px solid #2a2a3a; border-radius: 8px; color: #fff;
+      outline: none; font-size: 0.8125rem;
+    }
+    .size-field input:focus { border-color: #c9a961; }
+    @media (max-width: 640px) {
+      .size-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
     /* Image uploader */
     .upload-btn {
       padding: 12px; background: #2a2a3a; color: #e0e0e0; border: 1.5px dashed #444;
@@ -309,16 +326,37 @@
         </select>
       </div>
       <div class="form-field">
-        <label for="f-stock">Stock</label>
-        <input type="number" id="f-stock" min="0" placeholder="e.g. 10">
-      </div>
-      <div class="form-field">
         <label for="f-price">Price (৳)</label>
         <input type="number" id="f-price" min="0" step="1" placeholder="e.g. 1550">
       </div>
       <div class="form-field">
         <label for="f-discount">Discount (৳)</label>
         <input type="number" id="f-discount" min="0" step="1" placeholder="e.g. 0" value="0">
+      </div>
+      <div class="form-field full">
+        <label>Size-wise Stock</label>
+        <div class="size-grid">
+          <div class="size-field">
+            <label for="f-stock-s">S</label>
+            <input type="number" id="f-stock-s" min="0" placeholder="0">
+          </div>
+          <div class="size-field">
+            <label for="f-stock-m">M</label>
+            <input type="number" id="f-stock-m" min="0" placeholder="0">
+          </div>
+          <div class="size-field">
+            <label for="f-stock-l">L</label>
+            <input type="number" id="f-stock-l" min="0" placeholder="0">
+          </div>
+          <div class="size-field">
+            <label for="f-stock-xl">XL</label>
+            <input type="number" id="f-stock-xl" min="0" placeholder="0">
+          </div>
+          <div class="size-field">
+            <label for="f-stock-xxl">XXL</label>
+            <input type="number" id="f-stock-xxl" min="0" placeholder="0">
+          </div>
+        </div>
       </div>
       <div class="form-field full">
         <label for="f-desc">Short Description</label>
@@ -487,7 +525,11 @@
     $('f-category').value = 'fashion';
     $('f-price').value = '';
     $('f-discount').value = '0';
-    $('f-stock').value = '';
+    $('f-stock-s').value = '';
+    $('f-stock-m').value = '';
+    $('f-stock-l').value = '';
+    $('f-stock-xl').value = '';
+    $('f-stock-xxl').value = '';
     $('f-desc').value = '';
     productImages = [];
     renderThumbs();
@@ -502,7 +544,12 @@
     $('f-category').value = p.category === 'cosmetics' ? 'cosmetics' : 'fashion';
     $('f-price').value = p.price != null ? p.price : '';
     $('f-discount').value = p.discountAmount != null ? Math.max(0, Number(p.discountAmount)) : 0;
-    $('f-stock').value = p.stock != null ? p.stock : '';
+    const sizeStock = p.sizeStock || {};
+    $('f-stock-s').value = sizeStock.S != null ? sizeStock.S : '';
+    $('f-stock-m').value = sizeStock.M != null ? sizeStock.M : '';
+    $('f-stock-l').value = sizeStock.L != null ? sizeStock.L : '';
+    $('f-stock-xl').value = sizeStock.XL != null ? sizeStock.XL : '';
+    $('f-stock-xxl').value = sizeStock.XXL != null ? sizeStock.XXL : '';
     $('f-desc').value = p.shortDescription || '';
     productImages = Array.isArray(p.images) && p.images.length
       ? p.images.slice()
@@ -574,8 +621,14 @@
     const category = $('f-category').value;
     const price = Math.max(0, Number($('f-price').value) || 0);
     const discountAmount = Math.max(0, Number($('f-discount').value) || 0);
-    const stockRaw = $('f-stock').value.trim();
-    const stock = stockRaw === '' ? null : Math.max(0, Number(stockRaw) || 0);
+    const sizeStock = {
+      S: Math.max(0, Number($('f-stock-s').value) || 0),
+      M: Math.max(0, Number($('f-stock-m').value) || 0),
+      L: Math.max(0, Number($('f-stock-l').value) || 0),
+      XL: Math.max(0, Number($('f-stock-xl').value) || 0),
+      XXL: Math.max(0, Number($('f-stock-xxl').value) || 0),
+    };
+    const stock = Object.values(sizeStock).reduce((a, b) => a + b, 0);
     const shortDescription = $('f-desc').value.trim();
 
     if (!name) {
@@ -603,6 +656,7 @@
       shortDescription,
       images,
       image: images[0] || '',
+      sizeStock,
       stock,
       updatedAt: serverTimestamp(),
     };
