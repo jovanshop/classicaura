@@ -1087,6 +1087,33 @@ function generateReviews(product) {
   ];
 }
 
+/* Renders the Description tab body. Supports the legacy format (an array of
+   paragraph strings, used by the static js/products.js catalog) as well as
+   the plain multi-line string saved by the admin panel's "Full Description"
+   textarea — blank lines start a new <p>, single line breaks become <br>.
+   Falls back to the short description plus generic category copy when no
+   full description is set, matching prior behaviour. */
+function renderFullDescription(product) {
+  if (Array.isArray(product.fullDescription) && product.fullDescription.length) {
+    return product.fullDescription.map((p) => `<p>${p}</p>`).join('');
+  }
+  if (typeof product.fullDescription === 'string' && product.fullDescription.trim()) {
+    return product.fullDescription
+      .split(/\n\s*\n/)
+      .map((p) => p.trim())
+      .filter(Boolean)
+      .map((p) => `<p>${escapeHtml(p).replace(/\n/g, '<br>')}</p>`)
+      .join('');
+  }
+  return `
+    <p>${escapeHtml(product.shortDescription)}</p>
+    <p>Every Classic Aura piece is crafted with care using premium materials and time-honoured techniques. Our ${product.category === 'fashion' ? 'garments are designed for the modern woman who values both comfort and sophistication, ensuring you look and feel your best from morning to evening.' : 'formulations are developed with dermatologists and beauty experts, using ingredients that nurture your skin while delivering stunning results.'}</p>
+    <p>${product.category === 'fashion'
+      ? 'Available in a range of sizes to ensure the perfect fit. Each piece undergoes rigorous quality control before reaching your door.'
+      : 'Free from parabens and sulphates. Cruelty-free and proudly formulated for all skin types.'}</p>
+  `;
+}
+
 /* ─── Render full product page ─── */
 function renderProductPage(product, container) {
   const images = getProductImages(product);
@@ -1310,13 +1337,7 @@ function renderProductPage(product, container) {
       </div>
 
       <div class="tab-panel active" id="tab-description" role="tabpanel">
-        ${product.fullDescription ? product.fullDescription.map(p => `<p>${p}</p>`).join('') : `
-          <p>${escapeHtml(product.shortDescription)}</p>
-          <p>Every Classic Aura piece is crafted with care using premium materials and time-honoured techniques. Our ${product.category === 'fashion' ? 'garments are designed for the modern woman who values both comfort and sophistication, ensuring you look and feel your best from morning to evening.' : 'formulations are developed with dermatologists and beauty experts, using ingredients that nurture your skin while delivering stunning results.'}</p>
-          <p>${product.category === 'fashion'
-            ? 'Available in a range of sizes to ensure the perfect fit. Each piece undergoes rigorous quality control before reaching your door.'
-            : 'Free from parabens and sulphates. Cruelty-free and proudly formulated for all skin types.'}</p>
-        `}
+        ${renderFullDescription(product)}
         ${product.specs && product.specs.length ? `
           <h3 class="tab-subheading">Product Details</h3>
           <ul class="specs-list">
