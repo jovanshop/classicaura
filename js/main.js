@@ -72,16 +72,25 @@ document.addEventListener('DOMContentLoaded', () => {
     safeInit(refreshPriceDisplay);
     safeInit(refreshProductPage);
     safeInit(refreshCheckoutSummary);
+    safeInit(renderShopProducts);
+    safeInit(renderBestSellers);
   });
 });
 
-/* Re-render the product page in place when store data arrives. */
+/* Re-render the product page in place when store data arrives. Only shows
+   the "not found" state once we know the store has actually finished
+   loading (window.STORE_DATA_SOURCE is set) — otherwise a brand-new
+   Firestore-only product would flash "not found" every time, because the
+   very first render always runs before the Firestore fetch resolves. */
 function refreshProductPage() {
   const container = document.getElementById('product-container');
   if (!container) return;
   const productId = new URLSearchParams(window.location.search).get('id');
   const product = getStoreProductById(productId);
-  if (!product) return;
+  if (!product) {
+    showProductNotFound(container);
+    return;
+  }
   renderProductPage(product, container);
 }
 
@@ -932,7 +941,11 @@ function initProductPage() {
 
   const product = getStoreProductById(productId);
   if (!product) {
-    showProductNotFound(container);
+    if (!window.STORE_DATA_SOURCE) {
+      showProductLoading(container);
+    } else {
+      showProductNotFound(container);
+    }
     return;
   }
 
@@ -947,6 +960,14 @@ function initProductPage() {
   }
 
   renderProductPage(product, container);
+}
+
+function showProductLoading(container) {
+  container.innerHTML = `
+    <div class="loading" style="padding-top: var(--space-5xl); text-align: center; color: var(--color-gray-400, #888);">
+      Loading product…
+    </div>
+  `;
 }
 
 function showProductNotFound(container) {
